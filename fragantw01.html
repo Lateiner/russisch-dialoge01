@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Zuordnung</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1.6rem;
+        }
+
+        p.instruction {
+            text-align: center;
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+        }
+
+        .matching-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .item {
+            background: #fff;
+            border: 2px solid #ddd;
+            padding: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+            min-height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        /* Status-Farben */
+        .item.selected {
+            border-color: var(--accent-color);
+            background-color: #e1f5fe;
+            transform: scale(1.02);
+        }
+
+        .item.matched {
+            border-color: var(--success-color);
+            background-color: #e8f5e9;
+            cursor: default;
+            color: var(--success-color);
+            font-weight: bold;
+        }
+
+        .item.wrong {
+            border-color: var(--error-color);
+            background-color: #ffebee;
+            animation: shake 0.4s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        button {
+            padding: 15px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        button:active { transform: scale(0.98); }
+
+        #solution-btn { background-color: #f39c12; }
+        #reset-btn { background-color: #95a5a6; }
+
+        .feedback {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+            min-height: 24px;
+            font-size: 1.1rem;
+        }
+
+        /* Responsive Anpassung für Smartphones */
+        @media (max-width: 600px) {
+            .matching-grid { grid-template-columns: 1fr; }
+            .container { padding: 15px; }
+            h2 { font-size: 1.3rem; }
+            .item { font-size: 1rem; padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Was passt zusammen? (Zuordnungsübung)</h2>
+    <p class="instruction">Wähle zuerst einen Satz aus der linken Spalte und dann die passende Reaktion aus der rechten Spalte aus.</p>
+
+    <div class="matching-grid">
+        <div class="column" id="left-col">
+            <!-- Dynamischer Inhalt -->
+        </div>
+        <div class="column" id="right-col">
+            <!-- Dynamischer Inhalt -->
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="solution-btn">Lösung anzeigen</button>
+        <button id="reset-btn">Neu starten</button>
+    </div>
+
+    <div id="feedback" class="feedback"></div>
+</div>
+
+<script>
+    // Definition der Paare aus Dialog 1
+    const pairs = [
+        { left: "Привет!", right: "Привет!", id: 1 },
+        { left: "Как тебя зовут?", right: "Меня зовут Ира.", id: 2 },
+        { left: "А тебя?", right: "Меня зовут Никита.", id: 3 },
+        { left: "Приятно познакомиться.", right: "Мне тоже.", id: 4 }
+    ];
+
+    let selectedLeft = null;
+    let selectedRight = null;
+    let matchedCount = 0;
+
+    const leftCol = document.getElementById('left-col');
+    const rightCol = document.getElementById('right-col');
+    const feedback = document.getElementById('feedback');
+
+    function shuffle(array) {
+        let arr = [...array];
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function initGame() {
+        leftCol.innerHTML = '';
+        rightCol.innerHTML = '';
+        feedback.textContent = '';
+        selectedLeft = null;
+        selectedRight = null;
+        matchedCount = 0;
+
+        const shuffledLeft = shuffle(pairs);
+        const shuffledRight = shuffle(pairs);
+
+        shuffledLeft.forEach(pair => {
+            const div = document.createElement('div');
+            div.className = 'item';
+            div.textContent = pair.left;
+            div.dataset.id = pair.id;
+            div.onclick = () => selectItem(div, 'left');
+            leftCol.appendChild(div);
+        });
+
+        shuffledRight.forEach(pair => {
+            const div = document.createElement('div');
+            div.className = 'item';
+            div.textContent = pair.right;
+            div.dataset.id = pair.id;
+            div.onclick = () => selectItem(div, 'right');
+            rightCol.appendChild(div);
+        });
+    }
+
+    function selectItem(element, side) {
+        if (element.classList.contains('matched')) return;
+
+        if (side === 'left') {
+            document.querySelectorAll('#left-col .item').forEach(i => i.classList.remove('selected', 'wrong'));
+            selectedLeft = element;
+        } else {
+            document.querySelectorAll('#right-col .item').forEach(i => i.classList.remove('selected', 'wrong'));
+            selectedRight = element;
+        }
+
+        element.classList.add('selected');
+
+        if (selectedLeft && selectedRight) {
+            if (selectedLeft.dataset.id === selectedRight.dataset.id) {
+                // Erfolg
+                selectedLeft.classList.replace('selected', 'matched');
+                selectedRight.classList.replace('selected', 'matched');
+                selectedLeft = null;
+                selectedRight = null;
+                matchedCount++;
+                
+                if (matchedCount === pairs.length) {
+                    feedback.textContent = "Hervorragend! 🎉 Alles richtig zugeordnet.";
+                    feedback.style.color = "var(--success-color)";
+                } else {
+                    feedback.textContent = "Richtig! Such das nächste Paar.";
+                    feedback.style.color = "var(--success-color)";
+                }
+            } else {
+                // Fehler
+                const l = selectedLeft;
+                const r = selectedRight;
+                l.classList.add('wrong');
+                r.classList.add('wrong');
+                feedback.textContent = "Das passt leider nicht zusammen.";
+                feedback.style.color = "var(--error-color)";
+                
+                setTimeout(() => {
+                    if (l.classList.contains('wrong')) l.classList.remove('selected', 'wrong');
+                    if (r.classList.contains('wrong')) r.classList.remove('selected', 'wrong');
+                }, 500);
+                
+                selectedLeft = null;
+                selectedRight = null;
+            }
+        }
+    }
+
+    document.getElementById('solution-btn').onclick = () => {
+        const leftItems = document.querySelectorAll('#left-col .item');
+        const rightItems = document.querySelectorAll('#right-col .item');
+        
+        // Alle auf matched setzen
+        leftItems.forEach(item => { item.classList.add('matched'); item.classList.remove('selected', 'wrong'); });
+        rightItems.forEach(item => { item.classList.add('matched'); item.classList.remove('selected', 'wrong'); });
+        
+        feedback.textContent = "Hier siehst du die richtige Zuordnung.";
+        feedback.style.color = "var(--primary-color)";
+    };
+
+    document.getElementById('reset-btn').onclick = initGame;
+
+    // Start des Spiels
+    initGame();
+</script>
+
+</body>
+</html>
