@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Sofort-Feedback Lückentext</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        p.instruction {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+
+        .text-area {
+            line-height: 2.5;
+            font-size: 1.2rem;
+            background: #fff;
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            margin-bottom: 25px;
+        }
+
+        /* Styling für die Dropdowns */
+        select {
+            padding: 5px 10px;
+            font-size: 1.1rem;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            background-color: #fafafa;
+            cursor: pointer;
+            margin: 0 5px;
+            font-family: inherit;
+            color: var(--primary-color);
+            transition: all 0.3s ease;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        /* Dynamische Feedback-Klassen */
+        .correct { 
+            border-color: var(--success-color) !important; 
+            background-color: #e8f5e9 !important; 
+            color: var(--success-color) !important;
+            font-weight: bold;
+        }
+        
+        .incorrect { 
+            border-color: var(--error-color) !important; 
+            background-color: #ffebee !important; 
+            color: var(--error-color) !important;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        button {
+            padding: 15px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            transition: opacity 0.2s;
+        }
+
+        #solution-btn { background-color: #f39c12; }
+        #reset-btn { background-color: #95a5a6; }
+
+        .feedback-message {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+            min-height: 24px;
+        }
+
+        @media (max-width: 500px) {
+            .text-area { font-size: 1.1rem; line-height: 3; padding: 15px; }
+            select { margin: 5px 0; font-size: 1rem; width: auto; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Text vervollständigen</h2>
+    <p class="instruction">Wähle das richtige Wort aus. Du erhältst sofort eine Rückmeldung.</p>
+
+    <div class="text-area">
+        Привет! Меня 
+        <select class="gap" data-answer="зовут" onchange="checkGap(this)">
+            <option value="">...</option>
+            <option value="привет">привет</option>
+            <option value="зовут">зовут</option>
+            <option value="как">как</option>
+        </select> 
+        Ира. Как 
+        <select class="gap" data-answer="тебя" onchange="checkGap(this)">
+            <option value="">...</option>
+            <option value="ты">ты</option>
+            <option value="тебя">тебя</option>
+            <option value="вы">вы</option>
+        </select> 
+        зовут? Меня зовут Никита. 
+        <select class="gap" data-answer="Приятно" onchange="checkGap(this)">
+            <option value="">...</option>
+            <option value="Хорошо">Хорошо</option>
+            <option value="Привет">Привет</option>
+            <option value="Приятно">Приятно</option>
+        </select> 
+        познакомиться. 
+        <select class="gap" data-answer="Мне" onchange="checkGap(this)">
+            <option value="">...</option>
+            <option value="Я">Я</option>
+            <option value="Мне">Мне</option>
+            <option value="Меня">Меня</option>
+        </select> 
+        тоже. Я приехал 
+        <select class="gap" data-answer="из" onchange="checkGap(this)">
+            <option value="">...</option>
+            <option value="в">в</option>
+            <option value="на">на</option>
+            <option value="из">из</option>
+        </select> 
+        Германии. Я 
+        <select class="gap" data-answer="учу" onchange="checkGap(this)">
+            <option value="">...</option>
+            <option value="учу">учу</option>
+            <option value="читаю">читаю</option>
+            <option value="делаю">делаю</option>
+        </select> 
+        русский язык.
+    </div>
+
+    <div class="controls">
+        <button id="solution-btn">Lösung anzeigen</button>
+        <button id="reset-btn">Neu starten</button>
+    </div>
+
+    <div id="feedback-message" class="feedback-message"></div>
+</div>
+
+<script>
+    const feedbackMsg = document.getElementById('feedback-message');
+    const gaps = document.querySelectorAll('.gap');
+
+    // Funktion für direktes Feedback bei Änderung
+    function checkGap(selectElement) {
+        const selectedValue = selectElement.value;
+        const correctAnswer = selectElement.dataset.answer;
+
+        // Reset der Klassen bei Auswahl von "..."
+        if (selectedValue === "") {
+            selectElement.classList.remove('correct', 'incorrect');
+            updateFinalStatus();
+            return;
+        }
+
+        if (selectedValue === correctAnswer) {
+            selectElement.classList.add('correct');
+            selectElement.classList.remove('incorrect');
+        } else {
+            selectElement.classList.add('incorrect');
+            selectElement.classList.remove('correct');
+        }
+
+        updateFinalStatus();
+    }
+
+    // Prüft, ob alle Lücken korrekt gefüllt sind für eine Abschlussmeldung
+    function updateFinalStatus() {
+        let allCorrect = true;
+        let anyEmpty = false;
+
+        gaps.forEach(gap => {
+            if (gap.value === "") anyEmpty = true;
+            if (gap.value !== gap.dataset.answer) allCorrect = false;
+        });
+
+        if (allCorrect) {
+            feedbackMsg.textContent = "Hervorragend! Alles ist richtig. 🎉";
+            feedbackMsg.style.color = "var(--success-color)";
+        } else if (!anyEmpty) {
+            feedbackMsg.textContent = "Fast geschafft! Korrigiere die roten Felder.";
+            feedbackMsg.style.color = "var(--error-color)";
+        } else {
+            feedbackMsg.textContent = "";
+        }
+    }
+
+    // Button: Lösung anzeigen
+    document.getElementById('solution-btn').onclick = () => {
+        gaps.forEach(gap => {
+            gap.value = gap.dataset.answer;
+            gap.classList.add('correct');
+            gap.classList.remove('incorrect');
+        });
+        feedbackMsg.textContent = "Alle Lösungen wurden eingetragen.";
+        feedbackMsg.style.color = "var(--text-color)";
+    };
+
+    // Button: Reset
+    document.getElementById('reset-btn').onclick = () => {
+        gaps.forEach(gap => {
+            gap.value = "";
+            gap.classList.remove('correct', 'incorrect');
+        });
+        feedbackMsg.textContent = "";
+    };
+</script>
+
+</body>
+</html>
