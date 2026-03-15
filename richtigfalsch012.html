@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Faktencheck Dialog 2</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h2 { color: var(--primary-color); margin-bottom: 5px; }
+        p.instruction { color: #666; margin-bottom: 25px; font-size: 0.95rem; }
+
+        .progress-container {
+            width: 100%;
+            background: #eee;
+            border-radius: 10px;
+            height: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        #progress-bar {
+            height: 100%;
+            background: var(--accent-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .statement-box {
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 500;
+            padding: 20px;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            background-color: #fafafa;
+        }
+
+        .choice-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn-choice {
+            padding: 20px;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        .btn-true { background-color: var(--success-color); }
+        .btn-false { background-color: var(--error-color); }
+        .btn-choice:active { transform: scale(0.95); }
+        .btn-choice:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .feedback-area {
+            min-height: 60px;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+            font-weight: bold;
+        }
+
+        .feedback-correct { background-color: #e8f5e9; color: var(--success-color); border: 1px solid var(--success-color); }
+        .feedback-wrong { background-color: #ffebee; color: var(--error-color); border: 1px solid var(--error-color); }
+
+        .explanation {
+            font-weight: normal;
+            font-size: 0.9rem;
+            display: block;
+            margin-top: 5px;
+            color: #555;
+        }
+
+        #next-btn {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            display: none;
+            cursor: pointer;
+        }
+
+        #reset-btn {
+            margin-top: 15px;
+            background: none;
+            border: none;
+            color: var(--accent-color);
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        @media (max-width: 480px) {
+            .statement-box { font-size: 1.1rem; }
+            .btn-choice { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Faktencheck</h2>
+    <p class="instruction">Stimmen diese Aussagen laut Dialog 2? Klicke auf Richtig oder Falsch.</p>
+    
+    <div class="progress-container">
+        <div id="progress-bar"></div>
+    </div>
+
+    <div id="game-content">
+        <div class="statement-box" id="statement">
+            <!-- Aussage wird hier geladen -->
+        </div>
+
+        <div class="choice-buttons" id="choices">
+            <button class="btn-choice btn-true" onclick="checkAnswer(true)">Richtig</button>
+            <button class="btn-choice btn-false" onclick="checkAnswer(false)">Falsch</button>
+        </div>
+
+        <div class="feedback-area" id="feedback">
+            <!-- Feedback -->
+        </div>
+
+        <button id="next-btn" onclick="nextQuestion()">Nächste Frage</button>
+    </div>
+    
+    <button id="reset-btn" onclick="initGame()">Spiel neu starten</button>
+</div>
+
+<script>
+    const questions = [
+        {
+            text: "Александр приехал из России.",
+            correct: false,
+            explanation: "Falsch. Alexander kommt aus Deutschland (Я приехал из Германии)."
+        },
+        {
+            text: "Ира учится здесь.",
+            correct: true,
+            explanation: "Richtig. Sie sagt: 'Да, я учусь здесь'."
+        },
+        {
+            text: "Александр изучает русский язык уже два года.",
+            correct: false,
+            explanation: "Falsch. Er lernt erst seit einem Jahr (уже год)."
+        },
+        {
+            text: "Ира изучает русскую литературу.",
+            correct: true,
+            explanation: "Richtig. Sie studiert Sprache und Literatur."
+        },
+        {
+            text: "Ира хочет стать программистом.",
+            correct: false,
+            explanation: "Falsch. Sie möchte Lehrerin werden (хочу стать преподавателем)."
+        },
+        {
+            text: "Ира считает, что Александр уже хорошо говорит по-русски.",
+            correct: true,
+            explanation: "Richtig. Sie sagt: 'Кстати, ты уже хорошо говоришь по-русски'."
+        }
+    ];
+
+    let currentQ = 0;
+
+    function initGame() {
+        currentQ = 0;
+        document.getElementById('game-content').style.display = 'block';
+        showQuestion();
+    }
+
+    function showQuestion() {
+        const q = questions[currentQ];
+        document.getElementById('statement').textContent = q.text;
+        document.getElementById('progress-bar').style.width = ((currentQ / questions.length) * 100) + "%";
+        
+        // Reset UI
+        document.getElementById('feedback').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+        const btns = document.querySelectorAll('.btn-choice');
+        btns.forEach(b => b.disabled = false);
+    }
+
+    function checkAnswer(userChoice) {
+        const q = questions[currentQ];
+        const feedbackDiv = document.getElementById('feedback');
+        const isCorrect = userChoice === q.correct;
+        
+        feedbackDiv.style.display = 'block';
+        feedbackDiv.className = isCorrect ? 'feedback-area feedback-correct' : 'feedback-area feedback-wrong';
+        
+        feedbackDiv.innerHTML = isCorrect ? 
+            `Правильно! (Richtig!) <span class="explanation">${q.explanation}</span>` : 
+            `Неверно! (Falsch!) <span class="explanation">${q.explanation}</span>`;
+        
+        const btns = document.querySelectorAll('.btn-choice');
+        btns.forEach(b => b.disabled = true);
+        document.getElementById('next-btn').style.display = 'block';
+
+        if (currentQ === questions.length - 1) {
+            document.getElementById('next-btn').textContent = "Ergebnis anzeigen";
+        } else {
+            document.getElementById('next-btn').textContent = "Nächste Frage";
+        }
+    }
+
+    function nextQuestion() {
+        currentQ++;
+        if (currentQ < questions.length) {
+            showQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('progress-bar').style.width = "100%";
+        document.getElementById('statement').innerHTML = "<h3>Hervorragend! 🎉</h3><p>Du hast den Faktencheck abgeschlossen.</p>";
+        document.getElementById('choices').style.display = 'none';
+        document.getElementById('feedback').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    // Start
+    initGame();
+</script>
+
+</body>
+</html>
