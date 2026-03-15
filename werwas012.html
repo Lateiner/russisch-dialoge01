@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Wer sagt was?</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --ira-color: #e91e63;
+            --alex-color: #00bcd4;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h2 { color: var(--primary-color); margin-bottom: 5px; }
+        p.instruction { color: #666; margin-bottom: 20px; font-size: 0.95rem; }
+
+        /* Fortschrittsbalken */
+        .progress-bar {
+            height: 10px;
+            background: #eee;
+            border-radius: 5px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        #progress {
+            height: 100%;
+            background: var(--success-color);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        /* Karten-Bereich */
+        .card-display {
+            min-height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .phrase-card {
+            background: #fff;
+            border: 3px solid var(--primary-color);
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            width: 90%;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Sprecher-Buttons */
+        .speaker-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .btn-speaker {
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        .btn-speaker:active { transform: scale(0.95); }
+        .btn-ira { background-color: var(--ira-color); }
+        .btn-alex { background-color: var(--alex-color); }
+
+        /* Körbe für erledigte Sätze */
+        .buckets {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            text-align: left;
+        }
+
+        .bucket {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 10px;
+            min-height: 100px;
+            font-size: 0.85rem;
+        }
+
+        .bucket h3 {
+            font-size: 1rem;
+            margin-top: 0;
+            text-align: center;
+        }
+
+        .bucket-ira { border-color: var(--ira-color); background: #fff5f8; }
+        .bucket-alex { border-color: var(--alex-color); background: #f0fdff; }
+
+        .sorted-item {
+            background: white;
+            padding: 5px 8px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .controls { margin-top: 25px; display: flex; flex-direction: column; gap: 10px; }
+        .action-btn { padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; }
+        #solution-btn { background-color: #f39c12; }
+        #reset-btn { background-color: #95a5a6; }
+
+        @media (max-width: 500px) {
+            .phrase-card { font-size: 1rem; }
+            .btn-speaker { font-size: 1rem; }
+            .buckets { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Wer sagt was?</h2>
+    <p class="instruction">Lies den Satz und entscheide: Hat das Ira oder Alexander gesagt?</p>
+    
+    <div class="progress-bar"><div id="progress"></div></div>
+
+    <div class="card-display" id="card-display">
+        <!-- Aktuelle Karte -->
+    </div>
+
+    <div class="speaker-buttons">
+        <button class="btn-speaker btn-ira" onclick="assign('ira')">Ира</button>
+        <button class="btn-speaker btn-alex" onclick="assign('alex')">Александр</button>
+    </div>
+
+    <div class="buckets">
+        <div class="bucket bucket-ira" id="bucket-ira">
+            <h3>Ира</h3>
+        </div>
+        <div class="bucket bucket-alex" id="bucket-alex">
+            <h3>Александр</h3>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="action-btn" id="solution-btn" onclick="showSolution()">Lösung anzeigen</button>
+        <button class="action-btn" id="reset-btn" onclick="initGame()">Neu starten</button>
+    </div>
+</div>
+
+<script>
+    const dialogData = [
+        { text: "„Меня зовут Ира.“", speaker: "ira" },
+        { text: "„Да, я учусь здесь, а ты?“", speaker: "ira" },
+        { text: "„Я из России, а ты?“", speaker: "ira" },
+        { text: "„Я тоже изучаю русский язык и еще русскую литературу.“", speaker: "ira" },
+        { text: "„Я хочу стать преподавателем.“", speaker: "ira" },
+        { text: "„И я была рада.“", speaker: "ira" },
+        { text: "„Меня зовут Александр, а тебя?“", speaker: "alex" },
+        { text: "„Я тоже студент.“", speaker: "alex" },
+        { text: "„Я приехал из Германии.“", speaker: "alex" },
+        { text: "„Да, я учу русский язык уже год...“", speaker: "alex" },
+        { text: "„Хм, ты изучаешь русский язык?“", speaker: "alex" },
+        { text: "„Я был рад с тобой познакомиться.“", speaker: "alex" }
+    ];
+
+    let currentIndex = 0;
+    let shuffled = [];
+
+    function initGame() {
+        currentIndex = 0;
+        shuffled = [...dialogData].sort(() => Math.random() - 0.5);
+        document.getElementById('bucket-ira').innerHTML = '<h3>Ира</h3>';
+        document.getElementById('bucket-alex').innerHTML = '<h3>Александр</h3>';
+        updateUI();
+    }
+
+    function updateUI() {
+        const display = document.getElementById('card-display');
+        const progress = document.getElementById('progress');
+        
+        progress.style.width = (currentIndex / shuffled.length * 100) + "%";
+
+        if (currentIndex < shuffled.length) {
+            display.innerHTML = `<div class="phrase-card">${shuffled[currentIndex].text}</div>`;
+        } else {
+            display.innerHTML = `<div class="phrase-card" style="border-color: var(--success-color)">Fertig! 🎉 Alles zugeordnet.</div>`;
+        }
+    }
+
+    function assign(choice) {
+        if (currentIndex >= shuffled.length) return;
+
+        const current = shuffled[currentIndex];
+        const bucket = document.getElementById(`bucket-${choice}`);
+
+        if (current.speaker === choice) {
+            const item = document.createElement('div');
+            item.className = 'sorted-item';
+            item.textContent = current.text;
+            bucket.appendChild(item);
+            currentIndex++;
+            updateUI();
+        } else {
+            // Kurzes visuelles Feedback bei Fehler
+            const card = document.querySelector('.phrase-card');
+            card.style.borderColor = "var(--error-color)";
+            setTimeout(() => card.style.borderColor = "var(--primary-color)", 500);
+        }
+    }
+
+    function showSolution() {
+        initGame();
+        dialogData.forEach(item => {
+            const bucket = document.getElementById(`bucket-${item.speaker}`);
+            const div = document.createElement('div');
+            div.className = 'sorted-item';
+            div.textContent = item.text;
+            bucket.appendChild(div);
+        });
+        currentIndex = shuffled.length;
+        updateUI();
+    }
+
+    // Start
+    initGame();
+</script>
+
+</body>
+</html>
