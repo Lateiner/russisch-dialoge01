@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Themen-Cluster Dialog 2</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --study-color: #3498db;
+            --origin-color: #e67e22;
+            --language-color: #9b59b6;
+            --farewell-color: #27ae60;
+            --bg-color: #f4f7f6;
+            --error-color: #e74c3c;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h2 { color: var(--primary-color); margin-bottom: 5px; }
+        p.instruction { color: #666; margin-bottom: 25px; font-size: 0.95rem; }
+
+        /* Karten-Bereich */
+        .card-area {
+            min-height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .phrase-card {
+            background: #fff;
+            border: 3px solid var(--primary-color);
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 1.15rem;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            animation: popIn 0.3s ease-out;
+            transition: border-color 0.2s;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Kategorie-Buttons */
+        .category-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .cat-btn {
+            padding: 15px 10px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cat-btn span { font-size: 0.75rem; font-weight: normal; margin-top: 4px; }
+        .cat-btn:active { transform: scale(0.96); }
+
+        .btn-study { background-color: var(--study-color); }
+        .btn-origin { background-color: var(--origin-color); }
+        .btn-lang { background-color: var(--language-color); }
+        .btn-farewell { background-color: var(--farewell-color); }
+
+        /* Ergebnis-Cluster */
+        .buckets {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 15px;
+            text-align: left;
+        }
+
+        .bucket {
+            border: 2px solid #eee;
+            border-radius: 10px;
+            padding: 10px;
+            min-height: 120px;
+            background-color: #fafafa;
+        }
+
+        .bucket h3 {
+            font-size: 0.9rem;
+            margin-top: 0;
+            margin-bottom: 10px;
+            text-align: center;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .study-h { color: var(--study-color); }
+        .origin-h { color: var(--origin-color); }
+        .lang-h { color: var(--language-color); }
+        .farewell-h { color: var(--farewell-color); }
+
+        .sorted-item {
+            font-size: 0.8rem;
+            background: white;
+            padding: 4px 6px;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            border-left: 3px solid #ccc;
+            line-height: 1.3;
+        }
+
+        .controls { margin-top: 30px; display: flex; flex-direction: column; gap: 10px; }
+        .action-btn { padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; }
+        #solution-btn { background-color: #f39c12; }
+        #reset-btn { background-color: #95a5a6; }
+
+        @media (max-width: 500px) {
+            .category-grid { grid-template-columns: 1fr 1fr; }
+            .buckets { grid-template-columns: 1fr; }
+            .phrase-card { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Themen-Cluster</h2>
+    <p class="instruction">Ordne die Phrasen dem richtigen Thema zu.</p>
+    
+    <div class="card-area" id="card-area">
+        <!-- Hier erscheint die aktuelle Phrase -->
+    </div>
+
+    <div class="category-grid">
+        <button class="cat-btn btn-study" onclick="checkCategory('study')">Studium / Beruf<span>учёба / работа</span></button>
+        <button class="cat-btn btn-origin" onclick="checkCategory('origin')">Herkunft<span>откуда ты</span></button>
+        <button class="cat-btn btn-lang" onclick="checkCategory('lang')">Sprachkenntnisse<span>русский язык</span></button>
+        <button class="cat-btn btn-farewell" onclick="checkCategory('farewell')">Abschied<span>прощание</span></button>
+    </div>
+
+    <div class="buckets">
+        <div class="bucket" id="bucket-study"><h3 class="study-h">Studium</h3></div>
+        <div class="bucket" id="bucket-origin"><h3 class="origin-h">Herkunft</h3></div>
+        <div class="bucket" id="bucket-lang"><h3 class="lang-h">Sprache</h3></div>
+        <div class="bucket" id="bucket-farewell"><h3 class="farewell-h">Abschied</h3></div>
+    </div>
+
+    <div class="controls">
+        <button class="action-btn" id="solution-btn" onclick="showSolution()">Lösung anzeigen</button>
+        <button class="action-btn" id="reset-btn" onclick="initGame()">Neu starten</button>
+    </div>
+</div>
+
+<script>
+    const phrases = [
+        { text: "„Ты студентка?“", cat: "study" },
+        { text: "„Я учусь здесь, а ты?“", cat: "study" },
+        { text: "„Я тоже студент.“", cat: "study" },
+        { text: "„Я хочу стать преподавателем.“", cat: "study" },
+        { text: "„Откуда ты?“", cat: "origin" },
+        { text: "„Я из России, а ты?“", cat: "origin" },
+        { text: "„Я приехал из Германии.“", cat: "origin" },
+        { text: "„Ты изучаешь русский язык?“", cat: "lang" },
+        { text: "„Я учу русский язык уже год.“", cat: "lang" },
+        { text: "„Плохо говорю по-russki.“", cat: "lang" },
+        { text: "„Ты уже хорошо говоришь по-русски.“", cat: "lang" },
+        { text: "„Я был рад с тобой познакомиться.“", cat: "farewell" },
+        { text: "„И я была рада.“", cat: "farewell" },
+        { text: "„Пока!“", cat: "farewell" }
+    ];
+
+    let currentIndex = 0;
+    let shuffled = [];
+    const colors = { study: '#3498db', origin: '#e67e22', lang: '#9b59b6', farewell: '#27ae60' };
+
+    function initGame() {
+        currentIndex = 0;
+        shuffled = [...phrases].sort(() => Math.random() - 0.5);
+        document.querySelectorAll('.bucket').forEach(b => {
+            const h = b.querySelector('h3');
+            b.innerHTML = '';
+            b.appendChild(h);
+        });
+        updateUI();
+    }
+
+    function updateUI() {
+        const area = document.getElementById('card-area');
+        if (currentIndex < shuffled.length) {
+            area.innerHTML = `<div class="phrase-card" id="current-card">${shuffled[currentIndex].text}</div>`;
+        } else {
+            area.innerHTML = `<div class="phrase-card" style="border-color: var(--farewell-color)">Super! Alles sortiert. 🎉</div>`;
+        }
+    }
+
+    function checkCategory(selectedCat) {
+        if (currentIndex >= shuffled.length) return;
+
+        const current = shuffled[currentIndex];
+        const card = document.getElementById('current-card');
+
+        if (current.cat === selectedCat) {
+            const bucket = document.getElementById(`bucket-${selectedCat}`);
+            const item = document.createElement('div');
+            item.className = 'sorted-item';
+            item.style.borderLeftColor = colors[selectedCat];
+            item.textContent = current.text;
+            bucket.appendChild(item);
+            
+            currentIndex++;
+            updateUI();
+        } else {
+            card.style.borderColor = "var(--error-color)";
+            setTimeout(() => card.style.borderColor = "var(--primary-color)", 500);
+        }
+    }
+
+    function showSolution() {
+        initGame();
+        phrases.forEach(p => {
+            const bucket = document.getElementById(`bucket-${p.cat}`);
+            const item = document.createElement('div');
+            item.className = 'sorted-item';
+            item.style.borderLeftColor = colors[p.cat];
+            item.textContent = p.text;
+            bucket.appendChild(item);
+        });
+        currentIndex = shuffled.length;
+        updateUI();
+    }
+
+    initGame();
+</script>
+
+</body>
+</html>
