@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Satzbau Dialog 2</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --solution-color: #f39c12;
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        h2 { text-align: center; color: var(--primary-color); margin-bottom: 10px; }
+        p.instruction { text-align: center; color: #666; margin-bottom: 25px; font-size: 0.95rem; }
+
+        .progress-bar {
+            height: 8px;
+            background: #eee;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        #progress { height: 100%; background: var(--success-color); width: 0%; transition: width 0.3s; }
+
+        /* Bereich für den fertigen Satz */
+        .sentence-display {
+            min-height: 80px;
+            border: 2px dashed #ccc;
+            margin-bottom: 25px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 15px;
+            background-color: #fafafa;
+            border-radius: 10px;
+            align-content: flex-start;
+        }
+
+        /* Bereich für die Wort-Buttons */
+        .word-pool {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            min-height: 100px;
+        }
+
+        .word-btn {
+            background-color: white;
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 10px 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        .word-btn:hover { background-color: #e1f5fe; }
+        .word-btn:active { transform: scale(0.95); }
+        
+        .word-btn.used {
+            opacity: 0.2;
+            pointer-events: none;
+            border-color: #ddd;
+            color: #ddd;
+        }
+
+        .word-btn.in-result {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        /* Spezial-Styles für Erfolg/Lösung */
+        .correct-bg { background-color: #e8f5e9 !important; border-color: var(--success-color) !important; border-style: solid !important; }
+        .correct-item { background-color: var(--success-color) !important; border-color: var(--success-color) !important; }
+
+        .controls { display: flex; flex-direction: column; gap: 10px; }
+        .btn {
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+            color: white;
+            transition: opacity 0.2s;
+        }
+
+        #check-btn { background-color: var(--accent-color); }
+        #solution-btn { background-color: var(--solution-color); }
+        #next-btn { background-color: var(--success-color); display: none; }
+        #reset-btn { background-color: #95a5a6; }
+
+        .feedback {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+            min-height: 24px;
+        }
+
+        @media (max-width: 480px) {
+            .word-btn { padding: 8px 12px; font-size: 0.95rem; }
+            .container { padding: 15px; }
+            h2 { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Satzbau-Trainer: Dialog 2</h2>
+    <p class="instruction">Bringe die Wörter in die richtige Reihenfolge. Klicke ein Wort an, um es oben einzufügen oder wieder zu entfernen.</p>
+
+    <div class="progress-bar"><div id="progress"></div></div>
+
+    <div class="sentence-display" id="sentence-display"></div>
+
+    <div class="word-pool" id="word-pool"></div>
+
+    <div class="controls">
+        <button class="btn" id="check-btn">Prüfen</button>
+        <button class="btn" id="solution-btn">Lösung anzeigen</button>
+        <button class="btn" id="next-btn">Nächster Satz</button>
+        <button class="btn" id="reset-btn">Zurücksetzen</button>
+    </div>
+
+    <div id="feedback" class="feedback"></div>
+</div>
+
+<script>
+    const sentences = [
+        "„Меня зовут Александр, а тебя?“",
+        "„Да, я учусь здесь, а ты?“",
+        "„Я тоже студент. Откуда ты?“",
+        "„Я приехал из Германии.“",
+        "„Я тоже изучаю русский язык.“",
+        "„Я хочу стать преподавателем.“",
+        "„Кстати, ты уже хорошо говоришь по-русски.“",
+        "„Я был рад с тобой познакомиться.“"
+    ];
+
+    let currentIdx = 0;
+    let selectedWords = [];
+    let correctWords = [];
+
+    const sentenceDisplay = document.getElementById('sentence-display');
+    const wordPool = document.getElementById('word-pool');
+    const feedback = document.getElementById('feedback');
+    const nextBtn = document.getElementById('next-btn');
+    const checkBtn = document.getElementById('check-btn');
+    const solutionBtn = document.getElementById('solution-btn');
+    const progress = document.getElementById('progress');
+
+    function initRound() {
+        feedback.textContent = "";
+        nextBtn.style.display = "none";
+        checkBtn.style.display = "block";
+        solutionBtn.style.display = "block";
+        sentenceDisplay.classList.remove('correct-bg');
+        selectedWords = [];
+        sentenceDisplay.innerHTML = "";
+        
+        const fullSentence = sentences[currentIdx];
+        // Wir teilen den Satz auf, behalten aber Satzzeichen am Wort
+        correctWords = fullSentence.split(' ');
+        
+        progress.style.width = (currentIdx / sentences.length * 100) + "%";
+
+        let shuffled = [...correctWords].sort(() => Math.random() - 0.5);
+        renderPool(shuffled);
+    }
+
+    function renderPool(words) {
+        wordPool.innerHTML = "";
+        words.forEach((word, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'word-btn';
+            btn.textContent = word;
+            // Wir nutzen eine ID, um doppelte Wörter im Satz unterscheiden zu können
+            btn.dataset.poolId = index; 
+            btn.onclick = () => selectWord(btn, word);
+            wordPool.appendChild(btn);
+        });
+    }
+
+    function selectWord(poolBtn, word) {
+        if (poolBtn.classList.contains('used')) return;
+
+        const wordObj = { text: word, poolId: poolBtn.dataset.poolId };
+        selectedWords.push(wordObj);
+        poolBtn.classList.add('used');
+        
+        const resultBtn = document.createElement('button');
+        resultBtn.className = 'word-btn in-result';
+        resultBtn.textContent = word;
+        resultBtn.onclick = () => deselectWord(resultBtn, poolBtn, wordObj);
+        sentenceDisplay.appendChild(resultBtn);
+        feedback.textContent = "";
+    }
+
+    function deselectWord(resultBtn, poolBtn, wordObj) {
+        if (nextBtn.style.display === "block") return;
+        
+        selectedWords = selectedWords.filter(w => w.poolId !== wordObj.poolId);
+        resultBtn.remove();
+        poolBtn.classList.remove('used');
+    }
+
+    checkBtn.onclick = () => {
+        const userSentence = selectedWords.map(w => w.text).join(' ');
+        const targetSentence = correctWords.join(' ');
+
+        if (userSentence === targetSentence) {
+            successState();
+            feedback.textContent = "Правильно! (Richtig!) 🎉";
+            feedback.style.color = "var(--success-color)";
+        } else {
+            feedback.textContent = "Noch nicht ganz richtig. Überprüfe die Reihenfolge.";
+            feedback.style.color = "var(--error-color)";
+        }
+    };
+
+    solutionBtn.onclick = () => {
+        sentenceDisplay.innerHTML = "";
+        selectedWords = [];
+        correctWords.forEach(word => {
+            const btn = document.createElement('button');
+            btn.className = 'word-btn in-result correct-item';
+            btn.textContent = word;
+            sentenceDisplay.appendChild(btn);
+        });
+        successState();
+        feedback.textContent = "Hier ist die richtige Reihenfolge.";
+        feedback.style.color = "var(--solution-color)";
+    };
+
+    function successState() {
+        sentenceDisplay.classList.add('correct-bg');
+        document.querySelectorAll('.in-result').forEach(b => b.classList.add('correct-item'));
+        wordPool.innerHTML = "";
+        checkBtn.style.display = "none";
+        solutionBtn.style.display = "none";
+        nextBtn.style.display = "block";
+    }
+
+    nextBtn.onclick = () => {
+        currentIdx++;
+        if (currentIdx < sentences.length) {
+            initRound();
+        } else {
+            sentenceDisplay.innerHTML = "";
+            wordPool.innerHTML = "<h3>Hervorragend! 🎉</h3><p>Du hast alle Sätze aus Dialog 2 erfolgreich gemeistert.</p>";
+            nextBtn.style.display = "none";
+            checkBtn.style.display = "none";
+            solutionBtn.style.display = "none";
+            progress.style.width = "100%";
+            feedback.textContent = "";
+        }
+    };
+
+    document.getElementById('reset-btn').onclick = initRound;
+
+    initGame = initRound; // Alias für Initialisierung
+    initGame();
+</script>
+
+</body>
+</html>
