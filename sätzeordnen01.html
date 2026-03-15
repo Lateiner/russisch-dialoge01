@@ -78,6 +78,7 @@
             border-color: var(--accent-color);
             background-color: #e1f5fe;
             transform: scale(1.01);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .controls {
@@ -93,7 +94,7 @@
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: opacity 0.2s;
             font-weight: bold;
             width: 100%;
         }
@@ -115,6 +116,7 @@
 
         button:active {
             opacity: 0.8;
+            transform: scale(0.98);
         }
 
         .feedback {
@@ -124,13 +126,21 @@
             min-height: 24px;
         }
 
-        .correct { border-color: var(--success-color) !important; background-color: #e8f5e9 !important; }
-        .incorrect { border-color: var(--error-color) !important; background-color: #ffebee !important; }
+        .correct { 
+            border-color: var(--success-color) !important; 
+            background-color: #e8f5e9 !important; 
+        }
+        
+        .incorrect { 
+            border-color: var(--error-color) !important; 
+            background-color: #ffebee !important; 
+        }
+        
         .success-text { color: var(--success-color); }
         .error-text { color: var(--error-color); }
 
         @media (max-width: 480px) {
-            h2 { font-size: 1.2rem; }
+            h2 { font-size: 1.3rem; }
             .dialog-item { font-size: 1rem; padding: 12px; }
             .container { padding: 15px; }
         }
@@ -139,8 +149,8 @@
 <body>
 
 <div class="container">
-    <h2>Перемешанный диалог</h2>
-    <p class="instruction">Bringe den Dialog in die richtige Reihenfolge. Klicke zwei Sätze nacheinander an, um sie zu tauschen.</p>
+    <h2>Dialog ordnen</h2>
+    <p class="instruction">Bringe den Dialog in die richtige Reihenfolge. Klicke zwei Sätze nacheinander an, um ihre Plätze zu tauschen.</p>
     
     <ul id="sortable-list"></ul>
 
@@ -183,7 +193,7 @@
         feedbackElement.className = "feedback";
         selectedIndex = null;
         
-        // Sicherstellen, dass es nicht zufällig direkt richtig ist
+        // Mischen, bis die Reihenfolge definitiv falsch ist
         do {
             currentOrder = shuffle(correctOrder);
         } while (JSON.stringify(currentOrder) === JSON.stringify(correctOrder));
@@ -209,10 +219,11 @@
             renderList();
         } else {
             if (selectedIndex !== index) {
+                // Tausche die Elemente im Array
                 [currentOrder[selectedIndex], currentOrder[index]] = [currentOrder[index], currentOrder[selectedIndex]];
             }
             selectedIndex = null;
-            feedbackElement.textContent = "";
+            feedbackElement.textContent = ""; // Feedback bei Bewegung zurücksetzen
             renderList();
         }
     }
@@ -235,7 +246,7 @@
             feedbackElement.textContent = "Sehr gut! Правильно! 🎉";
             feedbackElement.className = "feedback success-text";
         } else {
-            feedbackElement.textContent = "Noch nicht ganz richtig.";
+            feedbackElement.textContent = "Noch nicht ganz richtig. Überprüfe die roten Felder.";
             feedbackElement.className = "feedback error-text";
         }
     };
@@ -245,7 +256,7 @@
         selectedIndex = null;
         renderList();
         
-        // Nach dem Rendern als korrekt markieren
+        // Alle Elemente als korrekt markieren
         const items = document.querySelectorAll('.dialog-item');
         items.forEach(item => item.classList.add('correct'));
         
@@ -255,7 +266,7 @@
 
     document.getElementById('reset-btn').onclick = initGame;
 
-    // Start
+    // Initialisierung beim Laden
     initGame();
 </script>
 
