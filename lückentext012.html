@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Sofort-Feedback Verben</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        p.instruction {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+
+        .text-area {
+            line-height: 2.8;
+            font-size: 1.15rem;
+            background: #fff;
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            margin-bottom: 25px;
+        }
+
+        /* Styling für die Dropdowns */
+        select {
+            padding: 5px 10px;
+            font-size: 1rem;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            background-color: #fafafa;
+            cursor: pointer;
+            font-family: inherit;
+            color: var(--primary-color);
+            transition: all 0.3s ease;
+            margin: 0 4px;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        /* Dynamische Feedback-Klassen */
+        .correct { 
+            border-color: var(--success-color) !important; 
+            background-color: #e8f5e9 !important; 
+            color: var(--success-color) !important;
+            font-weight: bold;
+        }
+        
+        .incorrect { 
+            border-color: var(--error-color) !important; 
+            background-color: #ffebee !important; 
+            color: var(--error-color) !important;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        button {
+            padding: 15px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            transition: opacity 0.2s;
+        }
+
+        #solution-btn { background-color: #f39c12; }
+        #reset-btn { background-color: #95a5a6; }
+
+        .status-message {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+            min-height: 24px;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 600px) {
+            .text-area { font-size: 1rem; line-height: 3.5; padding: 15px; }
+            select { margin: 5px 0; font-size: 0.95rem; width: auto; }
+            .container { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Was machen Ira und Alexander?</h2>
+    <p class="instruction">Wähle das richtige Verb aus. Du siehst sofort, ob es stimmt.</p>
+
+    <div class="text-area">
+        <b>Ира:</b> Да, я 
+        <select class="gap" data-answer="учусь" onchange="checkGap(this)">
+            <option value="">...</option>
+            <option value="учусь">учусь</option>
+            <option value="учишься">учишься</option>
+            <option value="изучаю">изучаю</option>
+        </select> 
+        здесь. <br>
+        
+        <b>Александр:</b> Хм, ты 
+        <select class="gap" data-answer="изучаешь" onchange="checkGap(this)">
+            <option value="">...</option>
+            <option value="изучаю">изучаю</option>
+            <option value="изучаешь">изучаешь</option>
+            <option value="учишься">учишься</option>
+        </select> 
+        русский язык? <br>
+        
+        <b>Ира:</b> Да, я 
+        <select class="gap" data-answer="учу" onchange="checkGap(this)">
+            <option value="">...</option>
+            <option value="учишь">учишь</option>
+            <option value="учу">учу</option>
+            <option value="изучаешь">изучаешь</option>
+        </select> 
+        русский язык уже год, но еще плохо 
+        <select class="gap" data-answer="говорю" onchange="checkGap(this)">
+            <option value="">...</option>
+            <option value="говоришь">говоришь</option>
+            <option value="говорю">говорю</option>
+            <option value="говорите">говорите</option>
+        </select> 
+        по-русски. <br>
+        
+        <b>Александр:</b> Я тоже 
+        <select class="gap" data-answer="изучаю" onchange="checkGap(this)">
+            <option value="">...</option>
+            <option value="изучаю">изучаю</option>
+            <option value="изучаешь">изучаешь</option>
+            <option value="учусь">учусь</option>
+        </select> 
+        русский язык. Я 
+        <select class="gap" data-answer="хочу" onchange="checkGap(this)">
+            <option value="">...</option>
+            <option value="хочешь">хочешь</option>
+            <option value="хотите">хотите</option>
+            <option value="хочу">хочу</option>
+        </select> 
+        стать преподавателем. <br>
+        
+        <b>Ира:</b> Кстати, ты уже хорошо 
+        <select class="gap" data-answer="говоришь" onchange="checkGap(this)">
+            <option value="">...</option>
+            <option value="говорю">говорю</option>
+            <option value="говоришь">говоришь</option>
+            <option value="говорят">говорят</option>
+        </select> 
+        по-русски!
+    </div>
+
+    <div class="controls">
+        <button id="solution-btn">Lösung anzeigen</button>
+        <button id="reset-btn">Neu starten</button>
+    </div>
+
+    <div id="status-message" class="status-message"></div>
+</div>
+
+<script>
+    const gaps = document.querySelectorAll('.gap');
+    const statusMsg = document.getElementById('status-message');
+
+    function checkGap(el) {
+        const selected = el.value;
+        const correct = el.dataset.answer;
+
+        if (selected === "") {
+            el.classList.remove('correct', 'incorrect');
+        } else if (selected === correct) {
+            el.classList.add('correct');
+            el.classList.remove('incorrect');
+        } else {
+            el.classList.add('incorrect');
+            el.classList.remove('correct');
+        }
+
+        updateFinalStatus();
+    }
+
+    function updateFinalStatus() {
+        let allCorrect = true;
+        let anyEmpty = false;
+
+        gaps.forEach(gap => {
+            if (gap.value === "") anyEmpty = true;
+            if (gap.value !== gap.dataset.answer) allCorrect = false;
+        });
+
+        if (allCorrect) {
+            statusMsg.textContent = "Hervorragend! Alle Verben sind korrekt konjugiert. 🎉";
+            statusMsg.style.color = "var(--success-color)";
+        } else if (!anyEmpty) {
+            statusMsg.textContent = "Fast geschafft! Korrigiere die roten Felder.";
+            statusMsg.style.color = "var(--error-color)";
+        } else {
+            statusMsg.textContent = "";
+        }
+    }
+
+    document.getElementById('solution-btn').onclick = () => {
+        gaps.forEach(gap => {
+            gap.value = gap.dataset.answer;
+            gap.classList.add('correct');
+            gap.classList.remove('incorrect');
+        });
+        statusMsg.textContent = "Alle Lösungen wurden eingetragen.";
+        statusMsg.style.color = "var(--primary-color)";
+    };
+
+    document.getElementById('reset-btn').onclick = () => {
+        gaps.forEach(gap => {
+            gap.value = "";
+            gap.classList.remove('correct', 'incorrect');
+        });
+        statusMsg.textContent = "";
+    };
+</script>
+
+</body>
+</html>
