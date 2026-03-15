@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Was passt nicht?</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h2 { color: var(--primary-color); margin-bottom: 10px; }
+        p.instruction { color: #666; margin-bottom: 25px; font-size: 0.95rem; }
+
+        .progress-container {
+            width: 100%;
+            background-color: #eee;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            height: 10px;
+            overflow: hidden;
+        }
+
+        #progress-bar {
+            height: 100%;
+            background-color: var(--success-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Wort-Gitter */
+        .word-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .word-card {
+            background: #fff;
+            border: 2px solid #ddd;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60px;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        .word-card:hover {
+            border-color: var(--accent-color);
+            background-color: #f0f8ff;
+        }
+
+        /* Feedback-Farben */
+        .correct { 
+            background-color: var(--success-color) !important; 
+            border-color: var(--success-color) !important; 
+            color: white; 
+        }
+        
+        .incorrect { 
+            background-color: var(--error-color) !important; 
+            border-color: var(--error-color) !important; 
+            color: white; 
+            animation: shake 0.4s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+            color: white;
+            transition: opacity 0.2s;
+        }
+
+        #next-btn { background-color: var(--primary-color); display: none; }
+        #solution-btn { background-color: #f39c12; }
+        #reset-btn { background-color: #95a5a6; }
+
+        .feedback-text {
+            margin-top: 20px;
+            font-weight: bold;
+            min-height: 24px;
+            font-size: 1.1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .word-grid { grid-template-columns: 1fr; }
+            .word-card { font-size: 1.1rem; padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Was passt nicht?</h2>
+    <p class="instruction">In jeder Gruppe gehört ein Wort nicht zum Thema „Kennenlernen“. Finde es!</p>
+
+    <div class="progress-container">
+        <div id="progress-bar"></div>
+    </div>
+
+    <div class="word-grid" id="word-grid">
+        <!-- Wörter werden per JS geladen -->
+    </div>
+
+    <div class="controls">
+        <button class="btn" id="next-btn">Nächste Gruppe</button>
+        <button class="btn" id="solution-btn">Lösung anzeigen</button>
+        <button class="btn" id="reset-btn">Neu starten</button>
+    </div>
+
+    <div id="feedback-text" class="feedback-text"></div>
+</div>
+
+<script>
+    const questions = [
+        {
+            words: ["Привет", "Пока", "Здравствуйте", "Хлеб"],
+            correct: 3, // Хлеб (Brot) passt nicht
+            hint: "Хлеб bedeutet Brot. Die anderen sind Begrüßungen."
+        },
+        {
+            words: ["Зовут", "Меня", "Тебя", "Молоко"],
+            correct: 3, // Молоко (Milch) passt nicht
+            hint: "Молоко bedeutet Milch. Die anderen werden für Namen genutzt."
+        },
+        {
+            words: ["Приятно", "Познакомиться", "Тоже", "Карандаш"],
+            correct: 3, // Карандаш (Bleistift) passt nicht
+            hint: "Карандаш bedeutet Bleistift. Die anderen sind Höflichkeitsfloskeln."
+        },
+        {
+            words: ["Как", "Откуда", "Кто", "Машина"],
+            correct: 3, // Машина (Auto) passt nicht
+            hint: "Машина bedeutet Auto. Die anderen sind Fragewörter."
+        },
+        {
+            words: ["Россия", "Германия", "Студент", "Окно"],
+            correct: 3, // Окно (Fenster) passt nicht
+            hint: "Окно bedeutet Fenster. Die anderen passen zum Thema Herkunft/Beruf."
+        },
+        {
+            words: ["Ты", "Вы", "Вас", "Пицца"],
+            correct: 3, // Пицца (Pizza) passt nicht
+            hint: "Пицца ist ein Lebensmittel. Die anderen sind Pronomen."
+        }
+    ];
+
+    let currentQ = 0;
+    let canClick = true;
+
+    const wordGrid = document.getElementById('word-grid');
+    const progressBar = document.getElementById('progress-bar');
+    const feedbackText = document.getElementById('feedback-text');
+    const nextBtn = document.getElementById('next-btn');
+
+    function loadQuestion() {
+        canClick = true;
+        nextBtn.style.display = "none";
+        feedbackText.textContent = "";
+        wordGrid.innerHTML = "";
+        
+        const q = questions[currentQ];
+        progressBar.style.width = ((currentQ / questions.length) * 100) + "%";
+
+        q.words.forEach((word, index) => {
+            const div = document.createElement('div');
+            div.className = 'word-card';
+            div.textContent = word;
+            div.onclick = () => checkAnswer(div, index);
+            wordGrid.appendChild(div);
+        });
+    }
+
+    function checkAnswer(element, index) {
+        if (!canClick) return;
+
+        const q = questions[currentQ];
+        if (index === q.correct) {
+            element.classList.add('correct');
+            feedbackText.textContent = "Richtig! " + q.hint;
+            feedbackText.style.color = "var(--success-color)";
+            canClick = false;
+            nextBtn.style.display = "block";
+            
+            if (currentQ === questions.length - 1) {
+                nextBtn.textContent = "Ergebnis anzeigen";
+            }
+        } else {
+            element.classList.add('incorrect');
+            feedbackText.textContent = "Falsch. Das gehört zum Thema!";
+            feedbackText.style.color = "var(--error-color)";
+            
+            setTimeout(() => {
+                if (canClick) element.classList.remove('incorrect');
+            }, 600);
+        }
+    }
+
+    document.getElementById('next-btn').onclick = () => {
+        currentQ++;
+        if (currentQ < questions.length) {
+            loadQuestion();
+        } else {
+            wordGrid.innerHTML = "<h3>Hervorragend! 🎉</h3><p>Du hast alle unpassenden Wörter gefunden.</p>";
+            nextBtn.style.display = "none";
+            progressBar.style.width = "100%";
+        }
+    };
+
+    document.getElementById('solution-btn').onclick = () => {
+        const q = questions[currentQ];
+        const cards = document.querySelectorAll('.word-card');
+        cards[q.correct].classList.add('correct');
+        feedbackText.textContent = "Lösung: " + q.words[q.correct] + " passt nicht.";
+        feedbackText.style.color = "var(--primary-color)";
+        canClick = false;
+        nextBtn.style.display = "block";
+    };
+
+    document.getElementById('reset-btn').onclick = () => {
+        currentQ = 0;
+        nextBtn.textContent = "Nächste Gruppe";
+        loadQuestion();
+    };
+
+    // Spiel starten
+    loadQuestion();
+</script>
+
+</body>
+</html>
