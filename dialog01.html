@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Chat: Kennenlernen</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --persona-bubble: #ffffff;
+            --user-bubble: #3498db;
+            --error-color: #e74c3c;
+            --success-color: #27ae60;
+            --bg-color: #e5ddd5; /* WhatsApp-ähnlicher Hintergrund */
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        /* Header */
+        .chat-header {
+            background: #075e54;
+            color: white;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background: #eee;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+
+        /* Chat Verlauf */
+        .chat-window {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .bubble {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 1rem;
+            line-height: 1.4;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .bubble.persona {
+            align-self: flex-start;
+            background: var(--persona-bubble);
+            color: #333;
+            border-top-left-radius: 2px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .bubble.user {
+            align-self: flex-end;
+            background: #dcf8c6;
+            color: #333;
+            border-top-right-radius: 2px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .bubble.confused {
+            background: #fadbd8;
+            color: #c0392b;
+            border: 1px solid #f5b7b1;
+            font-style: italic;
+        }
+
+        /* Antwort-Bereich */
+        .options-area {
+            background: #f0f0f0;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border-top: 1px solid #ccc;
+        }
+
+        .option-btn {
+            background: white;
+            border: 1px solid #ddd;
+            color: #444;
+            padding: 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            text-align: center;
+            transition: all 0.2s;
+            touch-action: manipulation;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .option-btn:hover {
+            background: #f9f9f9;
+            border-color: var(--user-bubble);
+        }
+
+        .option-btn:active {
+            transform: scale(0.97);
+            background: #e9e9e9;
+        }
+
+        #restart-btn {
+            background: var(--primary-color);
+            color: white;
+            display: none;
+            border-radius: 8px;
+        }
+
+        .chat-window::-webkit-scrollbar { width: 4px; }
+        .chat-window::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">
+        <div class="avatar">👩‍🎓</div>
+        <div>
+            <div style="font-weight: bold;">Ира</div>
+            <div style="font-size: 0.75rem; opacity: 0.9;">online</div>
+        </div>
+    </div>
+
+    <div id="chat-window" class="chat-window"></div>
+
+    <div id="options-area" class="options-area">
+        <button id="restart-btn" class="option-btn" onclick="startStory()">Neu starten</button>
+    </div>
+</div>
+
+<script>
+    const story = [
+        {
+            persona: "Привет! Как тебя зовут?",
+            options: [
+                { text: "Меня зовут [Name].", next: 1, correct: true },
+                { text: "Я из Германии.", response: "Эм... Приятно, но я спросила, как тебя ЗОВУТ. 🤔" },
+                { text: "Пока!", response: "Уже уходишь? Мы же только начали! 😮" }
+            ]
+        },
+        {
+            persona: "Приятно познакомиться! А откуда ты?",
+            options: [
+                { text: "Я из Германии, а ты?", next: 2, correct: true },
+                { text: "Я студент.", response: "Интересно! Но мой вопрос был: ОТКУДА ты? 🌍" },
+                { text: "Мне тоже.", response: "Что 'тебе тоже'? Я спросила, откуда ты приехал. 🤨" }
+            ]
+        },
+        {
+            persona: "Я из России. А что ты здесь делаешь? Ты учишься?",
+            options: [
+                { text: "Да, я студент. А ты?", next: 3, correct: true },
+                { text: "Здравствуйте!", response: "Мы же уже поздоровались... Ты меня внимательно слушаешь? 😅" },
+                { text: "Меня зовут Ира.", response: "Я знаю, что МЕНЯ зовут Ира. Я спросила про ТЕБЯ. 📚" }
+            ]
+        },
+        {
+            persona: "Я тоже студентка. Кстати, ты уже хорошо говоришь по-русски!",
+            options: [
+                { text: "Спасибо! Я учу русский язык уже год.", next: 4, correct: true },
+                { text: "Я из России.", response: "Но ты же сказал, что ты из Германии... Я запуталась! 😵‍💫" },
+                { text: "Как тебя зовут?", response: "Меня зовут Ира. Мы это уже обсуждали. Ты забыл? 🧐" }
+            ]
+        },
+        {
+            persona: "Молодец! Ладно, мне пора. Рада была познакомиться! Пока!",
+            options: [
+                { text: "И я был рад! Пока!", next: 'end', correct: true },
+                { text: "Я программист.", response: "Это круто, но мне правда пора бежать! Пока! 🏃‍♀️" },
+                { text: "Где туалет?", response: "Ой... ну, прямо и направо. Но мне пора! Счастливо! 👋" }
+            ]
+        }
+    ];
+
+    let currentStep = 0;
+    const chatWindow = document.getElementById('chat-window');
+    const optionsArea = document.getElementById('options-area');
+    const restartBtn = document.getElementById('restart-btn');
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function addMessage(text, side, isConfused = false) {
+        const bubble = document.createElement('div');
+        bubble.className = `bubble ${side} ${isConfused ? 'confused' : ''}`;
+        bubble.textContent = text;
+        chatWindow.appendChild(bubble);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function renderOptions() {
+        // Alte Buttons entfernen
+        const oldBtns = optionsArea.querySelectorAll('.option-btn:not(#restart-btn)');
+        oldBtns.forEach(b => b.remove());
+
+        if (currentStep === 'end') {
+            restartBtn.style.display = 'block';
+            return;
+        }
+
+        const stepData = story[currentStep];
+        // Optionen für diesen Schritt mischen
+        const shuffledOptions = shuffleArray([...stepData.options]);
+
+        shuffledOptions.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.textContent = opt.text;
+            btn.onclick = () => handleChoice(opt);
+            optionsArea.insertBefore(btn, restartBtn);
+        });
+    }
+
+    function handleChoice(option) {
+        addMessage(option.text, 'user');
+
+        setTimeout(() => {
+            if (option.correct) {
+                currentStep = option.next;
+                if (currentStep !== 'end') {
+                    addMessage(story[currentStep].persona, 'persona');
+                    renderOptions();
+                } else {
+                    addMessage("Конец диалога. Отличная работа! 🎉", 'persona');
+                    renderOptions();
+                }
+            } else {
+                addMessage(option.response, 'persona', true);
+                // Optionen bleiben sichtbar, Reihenfolge wird beim Fehler nicht neu gewürfelt,
+                // damit der Schüler sich kurz orientieren kann.
+            }
+        }, 700);
+    }
+
+    function startStory() {
+        chatWindow.innerHTML = '';
+        currentStep = 0;
+        restartBtn.style.display = 'none';
+        addMessage(story[0].persona, 'persona');
+        renderOptions();
+    }
+
+    startStory();
+</script>
+
+</body>
+</html>
