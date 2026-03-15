@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Männlich oder Weiblich?</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --masculine-color: #2980b9;
+            --feminine-color: #c2185b;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h2 { color: var(--primary-color); margin-bottom: 5px; }
+        p.instruction { color: #666; margin-bottom: 20px; font-size: 0.95rem; }
+
+        .progress-bar {
+            height: 10px;
+            background: #eee;
+            border-radius: 5px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        #progress {
+            height: 100%;
+            background: var(--success-color);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        /* Karten-Bereich */
+        .card-display {
+            min-height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .word-card {
+            background: #fff;
+            border: 3px solid var(--primary-color);
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Sortier-Buttons */
+        .gender-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .btn-gender {
+            padding: 18px;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        .btn-gender:active { transform: scale(0.95); }
+        .btn-masc { background-color: var(--masculine-color); }
+        .btn-fem { background-color: var(--feminine-color); }
+
+        .btn-gender span {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: normal;
+            margin-top: 5px;
+        }
+
+        /* Ergebnis-Listen */
+        .buckets {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .bucket {
+            border: 2px solid #eee;
+            border-radius: 10px;
+            padding: 10px;
+            min-height: 120px;
+            background: #fafafa;
+        }
+
+        .bucket h3 { font-size: 0.9rem; margin: 0 0 10px 0; color: #777; }
+
+        .sorted-word {
+            display: inline-block;
+            margin: 3px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: white;
+            animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes pop {
+            from { transform: scale(0); }
+            to { transform: scale(1); }
+        }
+
+        .bg-masc { background-color: var(--masculine-color); }
+        .bg-fem { background-color: var(--feminine-color); }
+
+        .controls { margin-top: 30px; display: flex; flex-direction: column; gap: 10px; }
+        .action-btn { padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; }
+        #solution-btn { background-color: #f39c12; }
+        #reset-btn { background-color: #95a5a6; }
+
+        @media (max-width: 500px) {
+            .word-card { font-size: 1.2rem; }
+            .btn-gender { font-size: 0.9rem; padding: 15px 10px; }
+            .gender-buttons { gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Männlich oder Weiblich?</h2>
+    <p class="instruction">Bezieht sich das Wort auf <b>Александр</b> (männlich) oder <b>Ира</b> (weiblich)? Achte auf die Endungen!</p>
+    
+    <div class="progress-bar"><div id="progress"></div></div>
+
+    <div class="card-display" id="card-display">
+        <!-- Aktuelles Wort -->
+    </div>
+
+    <div class="gender-buttons">
+        <button class="btn-gender btn-masc" onclick="classify('m')">
+            МYЖСКОЙ РОД
+            <span>Männlich (он)</span>
+        </button>
+        <button class="btn-gender btn-fem" onclick="classify('f')">
+            ЖЕНСКИЙ РОД
+            <span>Weiblich (она)</span>
+        </button>
+    </div>
+
+    <div class="buckets">
+        <div class="bucket" id="bucket-m">
+            <h3>он / Александр</h3>
+        </div>
+        <div class="bucket" id="bucket-f">
+            <h3>она / Ира</h3>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="action-btn" id="solution-btn" onclick="showSolution()">Lösung anzeigen</button>
+        <button class="action-btn" id="reset-btn" onclick="initGame()">Neu starten</button>
+    </div>
+</div>
+
+<script>
+    const grammarWords = [
+        { word: "студент", gender: "m" },
+        { word: "студентка", gender: "f" },
+        { word: "был рад", gender: "m" },
+        { word: "была рада", gender: "f" },
+        { word: "приехал", gender: "m" },
+        { word: "преподавателем", gender: "f" }, // Ira möchte Lehrerin werden
+        { word: "учишься", gender: "any", ignore: true }, // Neutral, lassen wir weg
+        { word: "Александр", gender: "m" },
+        { word: "Ира", gender: "f" },
+        { word: "он", gender: "m" },
+        { word: "она", gender: "f" }
+    ];
+
+    // Filtern der Wörter für das Spiel (nur eindeutige Genus-Marker)
+    const gameWords = grammarWords.filter(item => !item.ignore);
+
+    let currentIndex = 0;
+    let shuffled = [];
+
+    function initGame() {
+        currentIndex = 0;
+        shuffled = [...gameWords].sort(() => Math.random() - 0.5);
+        document.getElementById('bucket-m').innerHTML = '<h3>он / Александр</h3>';
+        document.getElementById('bucket-f').innerHTML = '<h3>она / Ира</h3>';
+        updateUI();
+    }
+
+    function updateUI() {
+        const display = document.getElementById('card-display');
+        const progress = document.getElementById('progress');
+        
+        progress.style.width = (currentIndex / shuffled.length * 100) + "%";
+
+        if (currentIndex < shuffled.length) {
+            display.innerHTML = `<div class="word-card">${shuffled[currentIndex].word}</div>`;
+        } else {
+            display.innerHTML = `<div class="word-card" style="border-color: var(--success-color)">Отлично! 🎉</div>`;
+        }
+    }
+
+    function classify(choice) {
+        if (currentIndex >= shuffled.length) return;
+
+        const current = shuffled[currentIndex];
+        const bucket = document.getElementById(`bucket-${choice}`);
+
+        if (current.gender === choice) {
+            const span = document.createElement('span');
+            span.className = `sorted-word ${choice === 'm' ? 'bg-masc' : 'bg-fem'}`;
+            span.textContent = current.word;
+            bucket.appendChild(span);
+            currentIndex++;
+            updateUI();
+        } else {
+            const card = document.querySelector('.word-card');
+            card.style.borderColor = "var(--error-color)";
+            card.style.color = "var(--error-color)";
+            setTimeout(() => {
+                card.style.borderColor = "var(--primary-color)";
+                card.style.color = "var(--primary-color)";
+            }, 500);
+        }
+    }
+
+    function showSolution() {
+        initGame();
+        gameWords.forEach(item => {
+            const bucket = document.getElementById(`bucket-${item.gender}`);
+            const span = document.createElement('span');
+            span.className = `sorted-word ${item.gender === 'm' ? 'bg-masc' : 'bg-fem'}`;
+            span.textContent = item.word;
+            bucket.appendChild(span);
+        });
+        currentIndex = shuffled.length;
+        updateUI();
+    }
+
+    initGame();
+</script>
+
+</body>
+</html>
