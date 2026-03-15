@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Hörverstehen</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h2 { color: var(--primary-color); margin-bottom: 10px; }
+        p.instruction { color: #666; margin-bottom: 25px; font-size: 0.95rem; }
+
+        /* Audio Button Bereich */
+        .audio-section {
+            margin-bottom: 30px;
+        }
+
+        .play-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            font-size: 2rem;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+            transition: transform 0.2s, background-color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .play-btn:active { transform: scale(0.9); }
+        .play-btn:hover { background-color: #2980b9; }
+
+        /* Antwort-Optionen */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .option-card {
+            background: #fff;
+            border: 2px solid #ddd;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.2s ease;
+            touch-action: manipulation;
+        }
+
+        .option-card:hover { border-color: var(--accent-color); }
+
+        /* Feedback Farben */
+        .correct { 
+            background-color: var(--success-color) !important; 
+            border-color: var(--success-color) !important; 
+            color: white; 
+        }
+        .incorrect { 
+            background-color: var(--error-color) !important; 
+            border-color: var(--error-color) !important; 
+            color: white; 
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        #next-btn { background-color: var(--primary-color); color: white; display: none; }
+        #solution-btn { background-color: #f39c12; color: white; }
+        #reset-btn { background-color: #95a5a6; color: white; }
+
+        .feedback-text {
+            margin-top: 15px;
+            font-weight: bold;
+            min-height: 24px;
+        }
+
+        /* Mobile */
+        @media (max-width: 480px) {
+            .option-card { font-size: 1rem; padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Hörverstehen</h2>
+    <p class="instruction">Klicke auf den Button, um den Satz zu hören. Wähle dann die richtige geschriebene Antwort aus.</p>
+
+    <div class="audio-section">
+        <button class="play-btn" id="play-btn" aria-label="Satz anhören">
+            🔊
+        </button>
+    </div>
+
+    <div class="options-grid" id="options-grid">
+        <!-- Optionen werden per JS geladen -->
+    </div>
+
+    <div class="controls">
+        <button class="btn" id="next-btn">Nächster Satz</button>
+        <button class="btn" id="solution-btn">Lösung anzeigen</button>
+        <button class="btn" id="reset-btn">Neu starten</button>
+    </div>
+
+    <div id="feedback-text" class="feedback-text"></div>
+</div>
+
+<script>
+    const sentences = [
+        "Привет!",
+        "Как тебя зовут?",
+        "Меня зовут Ира.",
+        "Приятно познакомиться.",
+        "Мне тоже.",
+        "Здравствуйте!",
+        "Откуда ты?",
+        "Я из России."
+    ];
+
+    let currentSentence = "";
+    let canClick = true;
+
+    const playBtn = document.getElementById('play-btn');
+    const optionsGrid = document.getElementById('options-grid');
+    const nextBtn = document.getElementById('next-btn');
+    const solutionBtn = document.getElementById('solution-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const feedbackText = document.getElementById('feedback-text');
+
+    // Audio-Funktion (Russische Stimme)
+    function speak(text) {
+        window.speechSynthesis.cancel(); // Vorherige Ansagen stoppen
+        const msg = new SpeechSynthesisUtterance();
+        msg.text = text;
+        msg.lang = 'ru-RU';
+        msg.rate = 0.8; // Etwas langsamer für Lernende
+        window.speechSynthesis.speak(msg);
+    }
+
+    function initRound() {
+        canClick = true;
+        feedbackText.textContent = "";
+        nextBtn.style.display = "none";
+        
+        // Zufälligen Satz auswählen
+        currentSentence = sentences[Math.floor(Math.random() * sentences.length)];
+        
+        // 4 zufällige Optionen zeigen (inkl. der richtigen)
+        let options = [currentSentence];
+        while(options.length < 4) {
+            let randomSatz = sentences[Math.floor(Math.random() * sentences.length)];
+            if(!options.includes(randomSatz)) options.push(randomSatz);
+        }
+        options.sort(() => Math.random() - 0.5);
+
+        renderOptions(options);
+    }
+
+    function renderOptions(options) {
+        optionsGrid.innerHTML = '';
+        options.forEach(text => {
+            const div = document.createElement('div');
+            div.className = 'option-card';
+            div.textContent = text;
+            div.onclick = () => checkAnswer(div, text);
+            optionsGrid.appendChild(div);
+        });
+    }
+
+    function checkAnswer(element, selectedText) {
+        if (!canClick) return;
+
+        if (selectedText === currentSentence) {
+            element.classList.add('correct');
+            feedbackText.textContent = "Richtig! ✅";
+            feedbackText.style.color = "var(--success-color)";
+            canClick = false;
+            nextBtn.style.display = "block";
+        } else {
+            element.classList.add('incorrect');
+            feedbackText.textContent = "Versuch es nochmal! ❌";
+            feedbackText.style.color = "var(--error-color)";
+            // Kurze Pause, dann rot entfernen für neuen Versuch
+            setTimeout(() => {
+                if (canClick) element.classList.remove('incorrect');
+            }, 600);
+        }
+    }
+
+    playBtn.onclick = () => speak(currentSentence);
+    
+    nextBtn.onclick = initRound;
+
+    solutionBtn.onclick = () => {
+        const cards = document.querySelectorAll('.option-card');
+        cards.forEach(card => {
+            if (card.textContent === currentSentence) {
+                card.classList.add('correct');
+            }
+        });
+        canClick = false;
+        nextBtn.style.display = "block";
+    };
+
+    resetBtn.onclick = initRound;
+
+    // Initialisierung
+    initRound();
+</script>
+
+</body>
+</html>
