@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Memory: Kennenlernen</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --bg-color: #f4f7f6;
+            --card-back: #2c3e50;
+            --card-front: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 15px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            text-align: center;
+        }
+
+        h2 { color: var(--primary-color); margin-bottom: 5px; font-size: 1.5rem; }
+        p.instruction { color: #666; margin-bottom: 20px; font-size: 0.9rem; }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            perspective: 1000px;
+        }
+
+        .memory-card {
+            aspect-ratio: 1 / 1;
+            position: relative;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform 0.5s;
+            touch-action: manipulation;
+        }
+
+        .memory-card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .memory-card.matched {
+            cursor: default;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s 0.5s, opacity 0.5s linear 0.5s;
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            padding: 5px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            overflow: hidden;
+            word-wrap: break-word;
+        }
+
+        .card-back {
+            background-color: var(--card-back);
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .card-front {
+            background-color: var(--card-front);
+            color: var(--primary-color);
+            transform: rotateY(180deg);
+            border: 2px solid var(--accent-color);
+        }
+
+        /* Unterschiedliche Farben für die Lösung */
+        .pair-0 { border-color: #3498db !important; background-color: #d6eaf8 !important; color: #1a5276 !important;}
+        .pair-1 { border-color: #e74c3c !important; background-color: #f9ebea !important; color: #78281f !important;}
+        .pair-2 { border-color: #2ecc71 !important; background-color: #d5f5e3 !important; color: #145a32 !important;}
+        .pair-3 { border-color: #f1c40f !important; background-color: #fef9e7 !important; color: #7d6608 !important;}
+        .pair-4 { border-color: #9b59b6 !important; background-color: #f5eef8 !important; color: #512e5f !important;}
+        .pair-5 { border-color: #e67e22 !important; background-color: #fdf2e9 !important; color: #a04000 !important;}
+        .pair-6 { border-color: #1abc9c !important; background-color: #e8f8f5 !important; color: #0b5345 !important;}
+        .pair-7 { border-color: #7f8c8d !important; background-color: #f2f4f4 !important; color: #2c3e50 !important;}
+
+        .controls {
+            margin-top: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            font-size: 1rem;
+        }
+
+        #reset-btn { background-color: #95a5a6; }
+        #solution-btn { background-color: #f39c12; }
+
+        @media (max-width: 480px) {
+            .memory-grid { grid-template-columns: repeat(4, 1fr); gap: 6px;}
+            .card-face { font-size: 0.70rem; }
+            h2 { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Vokabel-Memory</h2>
+    <p class="instruction">Finde die russische Phrase und die passende deutsche Übersetzung.</p>
+
+    <div class="stats">
+        <span>Versuche: <span id="moves">0</span></span>
+        <span>Paare: <span id="matches">0</span> / 8</span>
+    </div>
+
+    <div class="memory-grid" id="memory-grid"></div>
+
+    <div class="controls">
+        <button class="btn" id="solution-btn" onclick="showSolution()">Lösung anzeigen</button>
+        <button class="btn" id="reset-btn" onclick="initGame()">Spiel neu starten</button>
+    </div>
+</div>
+
+<script>
+    const vocabulary = [
+        { ru: "Привет!", de: "Hallo!" },
+        { ru: "Как тебя зовут?", de: "Wie heißt du?" },
+        { ru: "Меня зовут...", de: "Ich heiße..." },
+        { ru: "Приятно познакомиться.", de: "Schön, dich kennenzulernen." },
+        { ru: "Мне тоже.", de: "Ganz meinerseits." },
+        { ru: "Пока!", de: "Tschüss!" },
+        { ru: "Откуда ты?", de: "Woher kommst du?" },
+        { ru: "Я из Германии.", de: "Ich komme aus Deutschland." }
+    ];
+
+    let flippedCards = [];
+    let moves = 0;
+    let matches = 0;
+    let isLockBoard = false;
+
+    function initGame() {
+        const grid = document.getElementById('memory-grid');
+        grid.innerHTML = '';
+        moves = 0;
+        matches = 0;
+        flippedCards = [];
+        isLockBoard = false;
+        document.getElementById('moves').textContent = moves;
+        document.getElementById('matches').textContent = matches;
+
+        let cardData = [];
+        vocabulary.forEach((item, index) => {
+            cardData.push({ text: item.ru, pairId: index });
+            cardData.push({ text: item.de, pairId: index });
+        });
+
+        cardData.sort(() => Math.random() - 0.5);
+
+        cardData.forEach(data => {
+            const card = document.createElement('div');
+            card.className = 'memory-card';
+            card.dataset.pairId = data.pairId;
+            
+            card.innerHTML = `
+                <div class="card-face card-back">?</div>
+                <div class="card-face card-front">${data.text}</div>
+            `;
+            
+            card.addEventListener('click', flipCard);
+            grid.appendChild(card);
+        });
+    }
+
+    function flipCard() {
+        if (isLockBoard || this.classList.contains('matched') || this === flippedCards[0]) return;
+
+        this.classList.add('flipped');
+        flippedCards.push(this);
+
+        if (flippedCards.length === 2) {
+            moves++;
+            document.getElementById('moves').textContent = moves;
+            checkMatch();
+        }
+    }
+
+    function checkMatch() {
+        const [card1, card2] = flippedCards;
+        if (card1.dataset.pairId === card2.dataset.pairId) {
+            disableCards();
+        } else {
+            unflipCards();
+        }
+    }
+
+    function disableCards() {
+        matches++;
+        document.getElementById('matches').textContent = matches;
+        flippedCards.forEach(card => {
+            card.classList.add('matched');
+            card.removeEventListener('click', flipCard);
+        });
+        resetBoard();
+    }
+
+    function unflipCards() {
+        isLockBoard = true;
+        setTimeout(() => {
+            flippedCards.forEach(card => card.classList.remove('flipped'));
+            resetBoard();
+        }, 1200);
+    }
+
+    function resetBoard() {
+        flippedCards = [];
+        isLockBoard = false;
+    }
+
+    // Lösung anzeigen Funktion
+    function showSolution() {
+        isLockBoard = true; // Sperrt das Spielfeld
+
+        document.querySelectorAll('.memory-card').forEach(card => {
+            // Alle Karten aufdecken
+            card.classList.add('flipped');
+            
+            // Paare farbig markieren
+            const pairId = card.dataset.pairId;
+            const front = card.querySelector('.card-front');
+            front.classList.add(`pair-${pairId}`);
+        });
+    }
+
+    initGame();
+</script>
+</body>
+</html>
