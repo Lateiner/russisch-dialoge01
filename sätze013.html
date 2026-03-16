@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Dialog 3 ordnen</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --solution-color: #f39c12;
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            padding: 15px;
+            margin: 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        p.instruction {
+            text-align: center;
+            font-size: 0.95rem;
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        #sortable-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .dialog-item {
+            background: #fff;
+            border: 2px solid #ddd;
+            margin-bottom: 8px;
+            padding: 12px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            font-size: 1rem;
+            line-height: 1.4;
+            touch-action: manipulation;
+        }
+
+        .dialog-item:hover {
+            border-color: var(--accent-color);
+            background-color: #f9f9f9;
+        }
+
+        .dialog-item.selected {
+            border-color: var(--accent-color);
+            background-color: #e1f5fe !important;
+            transform: scale(1.01);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .controls {
+            margin-top: 25px;
+            display: flex;
+            gap: 10px;
+            flex-direction: column;
+        }
+
+        button {
+            padding: 14px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+            font-weight: bold;
+            width: 100%;
+        }
+
+        #check-btn { background-color: var(--accent-color); color: white; }
+        #solution-btn { background-color: var(--solution-color); color: white; }
+        #reset-btn { background-color: #95a5a6; color: white; }
+
+        button:active { transform: scale(0.98); opacity: 0.9; }
+
+        .feedback {
+            margin-top: 15px;
+            text-align: center;
+            font-weight: bold;
+            min-height: 24px;
+        }
+
+        /* Korrekt/Falsch Markierungen */
+        .correct { 
+            border-color: var(--success-color) !important; 
+            background-color: #e8f5e9 !important; 
+        }
+        .incorrect { 
+            border-color: var(--error-color) !important; 
+            background-color: #ffebee !important; 
+        }
+        .success-text { color: var(--success-color); }
+        .error-text { color: var(--error-color); }
+
+        @media (max-width: 480px) {
+            h2 { font-size: 1.2rem; }
+            .dialog-item { font-size: 0.9rem; padding: 10px; }
+            .container { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Dialog ordnen: Am Arbeitsplatz</h2>
+    <p class="instruction">Bringe den formellen Dialog zwischen Sвета und Сергей in die richtige Reihenfolge. Klicke zwei Sätze nacheinander an, um sie zu tauschen.</p>
+    
+    <ul id="sortable-list"></ul>
+
+    <div class="controls">
+        <button id="check-btn">Reihenfolge prüfen</button>
+        <button id="solution-btn">Lösung anzeigen</button>
+        <button id="reset-btn">Neu mischen</button>
+    </div>
+
+    <div id="feedback" class="feedback"></div>
+</div>
+
+<script>
+    const correctOrder = [
+        ",,Здравствуйте!“",
+        ",,Как вас зовут?“",
+        ",,Здравствуйте! Меня зовут Света, а вас?“",
+        ",,Меня зовут Сергей. Вы наша новая сотрудница?“",
+        ",,Да, я новый менеджер, а вы кем здесь работаете?“",
+        ",,Я программист. Я работаю здесь уже четыре года. Вам нравится работать тут?“",
+        ",,Да, очень. Вам тоже понравится! Удачи!“",
+        ",,Надеюсь, спасибо.“",
+        ",,Я рад с вами познакомиться.“",
+        ",,Я тоже.“",
+        ",,До свидания!“",
+        ",,До свидания!“"
+    ];
+
+    let currentOrder = [];
+    let selectedIndex = null;
+
+    const listElement = document.getElementById('sortable-list');
+    const feedbackElement = document.getElementById('feedback');
+
+    function shuffle(array) {
+        let shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    }
+
+    function initGame() {
+        feedbackElement.textContent = "";
+        feedbackElement.className = "feedback";
+        selectedIndex = null;
+        
+        // Mischen, bis die Reihenfolge definitiv nicht der richtigen entspricht
+        do {
+            currentOrder = shuffle(correctOrder);
+        } while (JSON.stringify(currentOrder) === JSON.stringify(correctOrder));
+        
+        renderList();
+    }
+
+    function renderList() {
+        listElement.innerHTML = '';
+        currentOrder.forEach((text, index) => {
+            const li = document.createElement('li');
+            li.className = 'dialog-item';
+            if (selectedIndex === index) li.classList.add('selected');
+            li.textContent = text;
+            li.onclick = () => handleItemClick(index);
+            listElement.appendChild(li);
+        });
+    }
+
+    function handleItemClick(index) {
+        if (selectedIndex === null) {
+            selectedIndex = index;
+            renderList();
+        } else {
+            if (selectedIndex !== index) {
+                // Tausche die Werte im Array
+                [currentOrder[selectedIndex], currentOrder[index]] = [currentOrder[index], currentOrder[selectedIndex]];
+            }
+            selectedIndex = null;
+            feedbackElement.textContent = "";
+            renderList();
+        }
+    }
+
+    document.getElementById('check-btn').onclick = () => {
+        const items = document.querySelectorAll('.dialog-item');
+        let allCorrect = true;
+
+        currentOrder.forEach((text, index) => {
+            items[index].classList.remove('correct', 'incorrect');
+            if (text === correctOrder[index]) {
+                items[index].classList.add('correct');
+            } else {
+                items[index].classList.add('incorrect');
+                allCorrect = false;
+            }
+        });
+
+        if (allCorrect) {
+            feedbackElement.textContent = "Hervorragend! Der Dialog ist korrekt. 🎉";
+            feedbackElement.className = "feedback success-text";
+        } else {
+            feedbackElement.textContent = "Noch nicht ganz richtig. Überprüfe die markierten Stellen.";
+            feedbackElement.className = "feedback error-text";
+        }
+    };
+
+    document.getElementById('solution-btn').onclick = () => {
+        currentOrder = [...correctOrder];
+        selectedIndex = null;
+        renderList();
+        
+        // Alle Elemente als korrekt markieren
+        const items = document.querySelectorAll('.dialog-item');
+        items.forEach(item => item.classList.add('correct'));
+        
+        feedbackElement.textContent = "Hier ist die richtige Reihenfolge.";
+        feedbackElement.className = "feedback";
+    };
+
+    document.getElementById('reset-btn').onclick = initGame;
+
+    // Start
+    initGame();
+</script>
+
+</body>
+</html>
