@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: 10 Berufe zuordnen</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 15px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        h2 { text-align: center; color: var(--primary-color); margin-bottom: 5px; }
+        p.instruction { text-align: center; color: #666; margin-bottom: 25px; font-size: 0.95rem; }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: #fff;
+            border: 2px solid #ddd;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 90px;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        .card .symbol { font-size: 2.2rem; margin-bottom: 5px; }
+        .card .word { font-size: 1rem; font-weight: bold; color: var(--primary-color); }
+
+        /* Interaktions-Styles */
+        .card.selected {
+            border-color: var(--accent-color);
+            background-color: #e1f5fe;
+            transform: scale(1.03);
+        }
+
+        .card.matched-correct {
+            border-color: var(--success-color);
+            background-color: #e8f5e9;
+            color: var(--success-color) !important;
+            cursor: default;
+        }
+
+        .card.wrong {
+            border-color: var(--error-color);
+            background-color: #ffebee;
+            animation: shake 0.4s;
+        }
+
+        /* 10 verschiedene Farben für die Lösung */
+        .pair-0 { border-color: #3498db !important; background-color: #ebf5fb !important; }
+        .pair-1 { border-color: #9b59b6 !important; background-color: #f5eef8 !important; }
+        .pair-2 { border-color: #e67e22 !important; background-color: #fdf2e9 !important; }
+        .pair-3 { border-color: #1abc9c !important; background-color: #e8f8f5 !important; }
+        .pair-4 { border-color: #f1c40f !important; background-color: #fef9e7 !important; }
+        .pair-5 { border-color: #e74c3c !important; background-color: #fdedec !important; }
+        .pair-6 { border-color: #2ecc71 !important; background-color: #eafaf1 !important; }
+        .pair-7 { border-color: #7f8c8d !important; background-color: #f2f4f4 !important; }
+        .pair-8 { border-color: #d35400 !important; background-color: #fbeee6 !important; }
+        .pair-9 { border-color: #27ae60 !important; background-color: #e9f7ef !important; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            font-size: 1rem;
+        }
+
+        #solution-btn { background-color: #f39c12; }
+        #reset-btn { background-color: #95a5a6; }
+
+        .feedback {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+            min-height: 24px;
+        }
+
+        @media (max-width: 600px) {
+            .game-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .card { min-height: 80px; padding: 10px; }
+            .card .symbol { font-size: 1.8rem; }
+            .card .word { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Berufe & Status (10 Paare)</h2>
+    <p class="instruction">Klicke auf ein Symbol und dann auf das passende russische Wort.</p>
+
+    <div class="game-grid" id="game-grid"></div>
+
+    <div class="controls">
+        <button class="btn" id="solution-btn">Lösung anzeigen</button>
+        <button class="btn" id="reset-btn">Neu starten</button>
+    </div>
+
+    <div id="feedback" class="feedback"></div>
+</div>
+
+<script>
+    const professions = [
+        { id: 0, symbol: "👔", word: "менеджер" },
+        { id: 1, symbol: "💻", word: "программист" },
+        { id: 2, symbol: "👩‍💼", word: "сотрудница" },
+        { id: 3, symbol: "👷", word: "работник" },
+        { id: 4, symbol: "👩‍🏫", word: "преподаватель" },
+        { id: 5, symbol: "👨‍⚕️", word: "врач" },
+        { id: 6, symbol: "👨‍🍳", word: "повар" },
+        { id: 7, symbol: "🎨", word: "дизайнер" },
+        { id: 8, symbol: "🏗️", word: "инженер" },
+        { id: 9, symbol: "🚗", word: "водитель" }
+    ];
+
+    let selectedId = null;
+    let selectedType = null; 
+    let matchedCount = 0;
+    let isSolutionActive = false;
+
+    const gameGrid = document.getElementById('game-grid');
+    const feedback = document.getElementById('feedback');
+
+    function initGame() {
+        gameGrid.innerHTML = '';
+        feedback.textContent = '';
+        selectedId = null;
+        selectedType = null;
+        matchedCount = 0;
+        isSolutionActive = false;
+
+        let cards = [];
+        professions.forEach(p => {
+            cards.push({ id: p.id, content: p.symbol, type: 'symbol' });
+            cards.push({ id: p.id, content: p.word, type: 'word' });
+        });
+
+        cards.sort(() => Math.random() - 0.5);
+
+        cards.forEach(card => {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.dataset.id = card.id;
+            div.dataset.type = card.type;
+            div.innerHTML = card.type === 'symbol' ? 
+                `<span class="symbol">${card.content}</span>` : 
+                `<span class="word">${card.content}</span>`;
+            div.onclick = () => handleCardClick(div);
+            gameGrid.appendChild(div);
+        });
+    }
+
+    function handleCardClick(cardElement) {
+        if (cardElement.classList.contains('matched-correct') || isSolutionActive) return;
+
+        const id = cardElement.dataset.id;
+        const type = cardElement.dataset.type;
+
+        if (selectedType === type) {
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('selected', 'wrong'));
+            cardElement.classList.add('selected');
+            selectedId = id;
+            return;
+        }
+
+        if (selectedId === null) {
+            cardElement.classList.add('selected');
+            selectedId = id;
+            selectedType = type;
+        } else {
+            if (selectedId === id) {
+                document.querySelectorAll(`[data-id="${id}"]`).forEach(c => {
+                    c.classList.remove('selected');
+                    c.classList.add('matched-correct');
+                });
+                matchedCount++;
+                selectedId = null;
+                selectedType = null;
+                if (matchedCount === professions.length) {
+                    feedback.textContent = "Hervorragend! Alles gelöst. 🎉";
+                    feedback.style.color = "var(--success-color)";
+                }
+            } else {
+                cardElement.classList.add('wrong');
+                const prevCard = document.querySelector('.selected');
+                if (prevCard) prevCard.classList.add('wrong');
+                setTimeout(() => {
+                    cardElement.classList.remove('wrong', 'selected');
+                    if (prevCard) prevCard.classList.remove('wrong', 'selected');
+                }, 500);
+                selectedId = null;
+                selectedType = null;
+            }
+        }
+    }
+
+    document.getElementById('solution-btn').onclick = () => {
+        isSolutionActive = true;
+        document.querySelectorAll('.card').forEach(card => {
+            card.classList.remove('selected', 'wrong', 'matched-correct');
+            const id = card.dataset.id;
+            card.classList.add(`pair-${id}`);
+            card.style.cursor = "default";
+        });
+        feedback.textContent = "Paare wurden farblich markiert.";
+        feedback.style.color = "var(--primary-color)";
+    };
+
+    document.getElementById('reset-btn').onclick = initGame;
+
+    initGame();
+</script>
+
+</body>
+</html>
