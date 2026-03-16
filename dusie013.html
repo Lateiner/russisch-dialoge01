@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Ты oder Вы?</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --informal-bg: #fff5e6;
+            --informal-border: #e67e22;
+            --formal-bg: #f0f4ff;
+            --formal-border: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 15px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h2 { color: var(--primary-color); margin-bottom: 5px; }
+        p.instruction { color: #666; margin-bottom: 25px; font-size: 0.95rem; }
+
+        /* Karten-Bereich */
+        .card-container {
+            min-height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .phrase-card {
+            background: white;
+            border: 3px solid var(--primary-color);
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 1.25rem;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            animation: popIn 0.3s ease-out;
+            transition: transform 0.2s;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Sortier-Buttons */
+        .sort-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .sort-btn {
+            padding: 18px 10px;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sort-btn:active { transform: scale(0.95); }
+        .btn-informal { background-color: var(--informal-border); }
+        .btn-formal { background-color: var(--formal-border); }
+        .sort-btn span { font-size: 0.8rem; font-weight: normal; margin-top: 5px; opacity: 0.9; }
+
+        /* Die "Eimer" (Buckets) */
+        .buckets {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .bucket {
+            border: 2px dashed #ccc;
+            border-radius: 12px;
+            padding: 15px;
+            min-height: 180px;
+            text-align: left;
+            transition: background-color 0.3s;
+        }
+
+        .bucket h3 {
+            margin-top: 0;
+            font-size: 1rem;
+            text-align: center;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .bucket-informal { border-color: var(--informal-border); background-color: var(--informal-bg); }
+        .bucket-formal { border-color: var(--formal-border); background-color: var(--formal-bg); }
+
+        .sorted-item {
+            font-size: 0.85rem;
+            background: white;
+            padding: 6px 10px;
+            margin-bottom: 6px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            animation: slideIn 0.2s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .wrong-feedback { animation: shake 0.4s; border-color: var(--error-color) !important; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        .controls { margin-top: 30px; display: flex; flex-direction: column; gap: 10px; }
+        .action-btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; }
+        #reset-btn { background-color: #95a5a6; }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .buckets { grid-template-columns: 1fr; }
+            .sort-controls { gap: 10px; }
+            .phrase-card { font-size: 1.1rem; padding: 15px; }
+            .sort-btn { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Ты (Du) oder Вы (Sie)?</h2>
+    <p class="instruction">Ordne die Ausdrücke der richtigen Kategorie zu. Achte auf Pronomen und Verb-Endungen.</p>
+    
+    <div class="card-container" id="card-container">
+        <!-- Aktuelle Karte -->
+    </div>
+
+    <div class="sort-controls">
+        <button class="sort-btn btn-informal" onclick="handleSort('informal')">
+            Ты (Informell)
+            <span>Freunde & Familie</span>
+        </button>
+        <button class="sort-btn btn-formal" onclick="handleSort('formal')">
+            Вы (Formell)
+            <span>Fremde & Beruf</span>
+        </button>
+    </div>
+
+    <div class="buckets">
+        <div class="bucket bucket-informal" id="bucket-informal">
+            <h3>Ты / Informell</h3>
+        </div>
+        <div class="bucket bucket-formal" id="bucket-formal">
+            <h3>Вы / Formell</h3>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="action-btn" id="reset-btn" onclick="initGame()">Neu starten</button>
+    </div>
+</div>
+
+<script>
+    const data = [
+        // Informell
+        { text: ",,Привет!“", cat: "informal" },
+        { text: ",,Как тебя зовут?“", cat: "informal" },
+        { text: ",,Откуда ты?“", cat: "informal" },
+        { text: ",,Ты студентка?“", cat: "informal" },
+        { text: ",,Я рад с тобой познакомиться.“", cat: "informal" },
+        { text: ",,Пока!“", cat: "informal" },
+        // Formell
+        { text: ",,Здравствуйте!“", cat: "formal" },
+        { text: ",,Как вас зовут?“", cat: "formal" },
+        { text: ",,Вы наша новая сотрудница?“", cat: "formal" },
+        { text: ",,А вы кем здесь работаете?“", cat: "formal" },
+        { text: ",,Вам нравится работать тут?“", cat: "formal" },
+        { text: ",,Я рад с вами познакомиться.“", cat: "formal" },
+        { text: ",,До свидания!“", cat: "formal" }
+    ];
+
+    let currentIndex = 0;
+    let shuffled = [];
+
+    function initGame() {
+        currentIndex = 0;
+        shuffled = [...data].sort(() => Math.random() - 0.5);
+        document.getElementById('bucket-informal').innerHTML = '<h3>Ты / Informell</h3>';
+        document.getElementById('bucket-formal').innerHTML = '<h3>Вы / Formell</h3>';
+        updateUI();
+    }
+
+    function updateUI() {
+        const container = document.getElementById('card-container');
+        if (currentIndex < shuffled.length) {
+            container.innerHTML = `<div class="phrase-card" id="current-card">${shuffled[currentIndex].text}</div>`;
+        } else {
+            container.innerHTML = `<div class="phrase-card" style="border-color: var(--success-color); color: var(--success-color);">Super! Alles richtig einsortiert. 🎉</div>`;
+        }
+    }
+
+    function handleSort(selectedCat) {
+        if (currentIndex >= shuffled.length) return;
+
+        const current = shuffled[currentIndex];
+        const card = document.getElementById('current-card');
+
+        if (current.cat === selectedCat) {
+            // Richtig
+            const bucket = document.getElementById(`bucket-${selectedCat}`);
+            const item = document.createElement('div');
+            item.className = 'sorted-item';
+            item.textContent = current.text;
+            bucket.appendChild(item);
+            
+            currentIndex++;
+            updateUI();
+        } else {
+            // Falsch - Feedback geben
+            card.classList.add('wrong-feedback');
+            setTimeout(() => card.classList.remove('wrong-feedback'), 400);
+        }
+    }
+
+    // Start
+    initGame();
+</script>
+
+</body>
+</html>
