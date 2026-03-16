@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Höfliche Reaktionen</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+            --btn-restart: #95a5a6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h2 { color: var(--primary-color); margin-bottom: 5px; }
+        p.instruction { color: #666; margin-bottom: 25px; font-size: 0.95rem; }
+
+        .progress-bar {
+            height: 8px;
+            background: #eee;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        #progress { height: 100%; background: var(--success-color); width: 0%; transition: width 0.3s; }
+
+        /* Sprechblasen-Design */
+        .chat-area {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-bottom: 30px;
+        }
+
+        .speech-bubble {
+            position: relative;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            max-width: 85%;
+            text-align: left;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .speech-bubble:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 20px;
+            width: 0;
+            height: 0;
+            border: 15px solid transparent;
+            border-top-color: var(--primary-color);
+            border-bottom: 0;
+            border-left: 0;
+            margin-bottom: -15px;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Antwort-Optionen */
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background: #fff;
+            border: 2px solid #ddd;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+            text-align: center;
+            touch-action: manipulation;
+        }
+
+        .option-btn:hover { border-color: var(--accent-color); background: #f0f8ff; }
+
+        .option-btn.correct { background-color: var(--success-color); border-color: var(--success-color); color: white; }
+        .option-btn.wrong { background-color: var(--error-color); border-color: var(--error-color); color: white; }
+
+        .feedback-text {
+            margin-top: 15px;
+            font-weight: bold;
+            min-height: 24px;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-main {
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            width: 100%;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            font-size: 1rem;
+        }
+
+        #next-btn { background: var(--primary-color); display: none; }
+        #restart-btn { background: var(--btn-restart); }
+
+        @media (max-width: 480px) {
+            .speech-bubble { font-size: 1.1rem; }
+            .option-btn { font-size: 1rem; padding: 12px; }
+            .container { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Höfliche Reaktionen (Büro)</h2>
+    <p class="instruction">Was ist die passende Antwort im formellen Kontext?</p>
+    
+    <div class="progress-bar"><div id="progress"></div></div>
+
+    <div class="chat-area">
+        <div class="speech-bubble" id="prompt-bubble"></div>
+    </div>
+
+    <div class="options-grid" id="options-grid"></div>
+
+    <div id="feedback" class="feedback-text"></div>
+
+    <div class="controls">
+        <button id="next-btn" class="btn-main" onclick="nextStep()">Nächste Situation</button>
+        <button id="restart-btn" class="btn-main" onclick="initGame()">Übung neu starten</button>
+    </div>
+</div>
+
+<script>
+    const scenarios = [
+        {
+            prompt: ",,Удачи!“",
+            correct: ",,Надеюсь, спасибо.“",
+            wrong: [",,Меня зовут Света.“", ",,Я программист.“"]
+        },
+        {
+            prompt: ",,Как вас зовут?“",
+            correct: ",,Меня зовут Сергей.“",
+            wrong: [",,Мне тоже.“", ",,До свидания!“"]
+        },
+        {
+            prompt: ",,Я рад с вами познакомиться.“",
+            correct: ",,Я тоже.“",
+            wrong: [",,Здравствуйте!“", ",,Удачи!“"]
+        },
+        {
+            prompt: ",,Вам нравится работать тут?“",
+            correct: ",,Да, очень.“",
+            wrong: [",,Я новый менеджер.“", ",,До свидания!“"]
+        },
+        {
+            prompt: ",,Вы наша новая сотрудница?“",
+            correct: ",,Да, я новый менеджер.“",
+            wrong: [",,Я работаю четыре года.“", ",,Как вас зовут?“"]
+        },
+        {
+            prompt: ",,До свидания!“",
+            correct: ",,До свидания!“",
+            wrong: [",,Мне тоже.“", ",,Здравствуйте!“"]
+        }
+    ];
+
+    let currentIdx = 0;
+    let canClick = true;
+
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function initGame() {
+        currentIdx = 0;
+        loadScenario();
+    }
+
+    function loadScenario() {
+        canClick = true;
+        document.getElementById('feedback').textContent = "";
+        document.getElementById('next-btn').style.display = "none";
+        document.getElementById('progress').style.width = (currentIdx / scenarios.length * 100) + "%";
+        
+        const scenario = scenarios[currentIdx];
+        document.getElementById('prompt-bubble').textContent = scenario.prompt;
+        
+        let options = [scenario.correct, ...scenario.wrong];
+        options = shuffle(options);
+        
+        const grid = document.getElementById('options-grid');
+        grid.innerHTML = "";
+        
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.textContent = opt;
+            btn.onclick = () => checkAnswer(btn, opt);
+            grid.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(btn, choice) {
+        if (!canClick) return;
+        const scenario = scenarios[currentIdx];
+        
+        if (choice === scenario.correct) {
+            btn.classList.add('correct');
+            document.getElementById('feedback').textContent = "Правильно! ✅";
+            document.getElementById('feedback').style.color = "var(--success-color)";
+            canClick = false;
+            document.getElementById('next-btn').style.display = "block";
+        } else {
+            btn.classList.add('wrong');
+            document.getElementById('feedback').textContent = "Das passt hier nicht. ❌";
+            document.getElementById('feedback').style.color = "var(--error-color)";
+            setTimeout(() => {
+                if(canClick) btn.classList.remove('wrong');
+            }, 800);
+        }
+    }
+
+    function nextStep() {
+        currentIdx++;
+        if (currentIdx < scenarios.length) {
+            loadScenario();
+        } else {
+            document.getElementById('progress').style.width = "100%";
+            document.getElementById('prompt-bubble').textContent = "Отлично! 🎉";
+            document.getElementById('options-grid').innerHTML = "<p>Du hast alle Büro-Situationen aus Dialog 3 gemeistert.</p>";
+            document.getElementById('next-btn').style.display = "none";
+        }
+    }
+
+    // Start
+    initGame();
+</script>
+
+</body>
+</html>
