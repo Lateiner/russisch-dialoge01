@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: 10 Lücken Dialog 3</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 850px;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        h2 { text-align: center; color: var(--primary-color); margin-bottom: 10px; }
+        p.instruction { text-align: center; color: #666; margin-bottom: 30px; font-size: 0.95rem; }
+
+        .text-area {
+            line-height: 3;
+            font-size: 1.1rem;
+            background: #fff;
+            padding: 25px;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            margin-bottom: 25px;
+        }
+
+        select {
+            padding: 4px 8px;
+            font-size: 1rem;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            background-color: #fafafa;
+            cursor: pointer;
+            font-family: inherit;
+            color: var(--primary-color);
+            transition: all 0.3s ease;
+            margin: 0 2px;
+        }
+
+        .correct { border-color: var(--success-color) !important; background-color: #e8f5e9 !important; color: var(--success-color) !important; font-weight: bold; }
+        .incorrect { border-color: var(--error-color) !important; background-color: #ffebee !important; color: var(--error-color) !important; }
+
+        .controls { display: flex; flex-direction: column; gap: 12px; }
+        button { padding: 15px; font-size: 1rem; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; transition: opacity 0.2s; }
+        #solution-btn { background-color: #f39c12; }
+        #reset-btn { background-color: #95a5a6; }
+
+        .status-msg { text-align: center; margin-top: 20px; font-weight: bold; min-height: 24px; font-size: 1.1rem; }
+
+        @media (max-width: 600px) {
+            .text-area { font-size: 0.95rem; line-height: 3.8; padding: 15px; }
+            select { margin: 4px 0; font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Bericht aus dem Büro (10 Lücken)</h2>
+    <p class="instruction">Vervollständige die Geschichte über Света und Сергей. Wähle die richtigen Formen aus.</p>
+
+    <div class="text-area">
+        Света — новая 
+        <select class="gap" data-answer="сотрудница" onchange="checkGap(this)">
+            <option value="">...</option>
+            <option value="сотрудница">сотрудница</option>
+            <option value="студентка">студентка</option>
+        </select> 
+        в офисе. Она говорит: 
+        <select class="gap" data-answer=",,Здравствуйте!“" onchange="checkGap(this)">
+            <option value="">...</option>
+            <option value=",,Привет!“">,,Привет!“</option>
+            <option value=",,Здравствуйте!“">,,Здравствуйте!“</option>
+        </select>, 
+        потому что она хочет быть 
+        <select class="gap" data-answer="вежливой" onchange="checkGap(this)">
+            <option value="">...</option>
+            <option value="вежливой">вежливой</option>
+            <option value="плохой">плохой</option>
+        </select>. 
+        Она спрашивает Сергея: ,,Как 
+        <select class="gap" data-answer="вас" onchange="checkGap(this)">
+            <option value="">...</option>
+            <option value="тебя">тебя</option>
+            <option value="вас">вас</option>
+        </select> 
+        зовут?“. Света — новый 
+        <select class="gap" data-answer="менеджер" onchange="checkGap(this)">
+            <option value="">...</option>
+            <option value="менеджер">менеджер</option>
+            <option value="программист">программист</option>
+        </select>, 
+        а Сергей — 
+        <select class="gap" data-answer="программист" onchange="checkGap(this)">
+            <option value="">...</option>
+            <option value="менеджер">менеджер</option>
+            <option value="программист">программист</option>
+        </select>. 
+        Сергей работает здесь уже 
+        <select class="gap" data-answer="четыре" onchange="checkGap(this)">
+            <option value="">...</option>
+            <option value="четыре">четыре</option>
+            <option value="пять">пять</option>
+        </select> 
+        <select class="gap" data-answer="года" onchange="checkGap(this)">
+            <option value="">...</option>
+            <option value="год">год</option>
+            <option value="года">года</option>
+            <option value="лет">лет</option>
+        </select>. 
+        Он рад с ней 
+        <select class="gap" data-answer="познакомиться" onchange="checkGap(this)">
+            <option value="">...</option>
+            <option value="попрощаться">попрощаться</option>
+            <option value="познакомиться">познакомиться</option>
+        </select>. 
+        В конце они говорят: 
+        <select class="gap" data-answer=",,До свидания!“" onchange="checkGap(this)">
+            <option value="">...</option>
+            <option value=",,До свидания!“">,,До свидания!“</option>
+            <option value=",,Пока!“">,,Пока!“</option>
+        </select>.
+    </div>
+
+    <div class="controls">
+        <button id="solution-btn">Lösung anzeigen</button>
+        <button id="reset-btn">Neu starten</button>
+    </div>
+
+    <div id="status-msg" class="status-msg"></div>
+</div>
+
+<script>
+    const gaps = document.querySelectorAll('.gap');
+    const statusMsg = document.getElementById('status-msg');
+
+    function checkGap(el) {
+        const selected = el.value;
+        const correct = el.dataset.answer;
+
+        if (selected === "") {
+            el.classList.remove('correct', 'incorrect');
+        } else if (selected === correct) {
+            el.classList.add('correct');
+            el.classList.remove('incorrect');
+        } else {
+            el.classList.add('incorrect');
+            el.classList.remove('correct');
+        }
+        updateStatus();
+    }
+
+    function updateStatus() {
+        let allCorrect = true;
+        let anyEmpty = false;
+
+        gaps.forEach(gap => {
+            if (gap.value === "") anyEmpty = true;
+            if (gap.value !== gap.dataset.answer) allCorrect = false;
+        });
+
+        if (allCorrect) {
+            statusMsg.textContent = "Hervorragend! Alle 10 Lücken sind korrekt. 🎉";
+            statusMsg.style.color = "var(--success-color)";
+        } else if (!anyEmpty) {
+            statusMsg.textContent = "Fast geschafft! Überprüfe die roten Felder.";
+            statusMsg.style.color = "var(--error-color)";
+        } else {
+            statusMsg.textContent = "";
+        }
+    }
+
+    document.getElementById('solution-btn').onclick = () => {
+        gaps.forEach(gap => {
+            gap.value = gap.dataset.answer;
+            gap.classList.add('correct');
+            gap.classList.remove('incorrect');
+        });
+        statusMsg.textContent = "Alle Lösungen wurden eingetragen.";
+        statusMsg.style.color = "var(--primary-color)";
+    };
+
+    document.getElementById('reset-btn').onclick = () => {
+        gaps.forEach(gap => {
+            gap.value = "";
+            gap.classList.remove('correct', 'incorrect');
+        });
+        statusMsg.textContent = "";
+    };
+</script>
+
+</body>
+</html>
