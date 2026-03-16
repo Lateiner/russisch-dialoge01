@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Odd One Out (Büro)</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h2 { color: var(--primary-color); margin-bottom: 10px; }
+        p.instruction { color: #666; margin-bottom: 25px; font-size: 0.95rem; }
+
+        .progress-bar {
+            height: 8px;
+            background: #eee;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        #progress { height: 100%; background: var(--accent-color); width: 0%; transition: width 0.3s; }
+
+        /* Wort-Gitter */
+        .word-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .word-btn {
+            background-color: var(--card-bg);
+            border: 2px solid #ddd;
+            padding: 20px 10px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            touch-action: manipulation;
+            color: var(--primary-color);
+        }
+
+        .word-btn:hover { border-color: var(--accent-color); background-color: #f0f8ff; }
+        
+        .word-btn.correct { background-color: var(--success-color); border-color: var(--success-color); color: white; }
+        .word-btn.wrong { background-color: var(--error-color); border-color: var(--error-color); color: white; animation: shake 0.4s; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        .feedback-text {
+            min-height: 50px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn-main {
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            font-size: 1rem;
+            transition: opacity 0.2s;
+        }
+
+        #next-btn { background-color: var(--primary-color); display: none; }
+        #solution-btn { background-color: #f39c12; }
+        #restart-btn { background-color: #95a5a6; }
+
+        @media (max-width: 480px) {
+            .word-grid { grid-template-columns: 1fr; }
+            .word-btn { padding: 15px 10px; font-size: 1rem; }
+            h2 { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Was passt nicht? (Büro)</h2>
+    <p class="instruction">Finde das Wort, das <u>nicht</u> zum Kontext ,,Arbeit/Büro“ passt.</p>
+
+    <div class="progress-bar"><div id="progress"></div></div>
+
+    <div class="word-grid" id="word-grid"></div>
+
+    <div id="feedback" class="feedback-text"></div>
+
+    <div class="controls">
+        <button id="next-btn" class="btn-main" onclick="nextQuestion()">Nächste Gruppe</button>
+        <button id="solution-btn" class="btn-main" onclick="showSolution()">Lösung anzeigen</button>
+        <button id="restart-btn" class="btn-main" onclick="initGame()">Übung neu starten</button>
+    </div>
+</div>
+
+<script>
+    const sets = [
+        {
+            words: ["программист", "менеджер", "сотрудница", "студентка"],
+            oddIndex: 3,
+            explanation: ",,студентка“ (Studentin) gehört zum Studium. Die anderen sind Berufe im Büro."
+        },
+        {
+            words: ["офис", "работа", "фирма", "университет"],
+            oddIndex: 3,
+            explanation: ",,университет“ (Universität) passt zu Dialog 2. In Dialog 3 sind wir bei einer Firma."
+        },
+        {
+            words: ["Здравствуйте!", "До свидания!", "Как вас зовут?", "Привет!"],
+            oddIndex: 3,
+            explanation: ",,Привет!“ ist informell. Im Büro nutzen wir den formellen Stil (Dialog 3)."
+        },
+        {
+            words: ["четыре года", "новый менеджер", "уже работает", "учит литературу"],
+            oddIndex: 3,
+            explanation: ",,учит литературу“ (studiert Literatur) war Iras Thema in Dialog 2."
+        },
+        {
+            words: ["сотрудник", "работник", "коллега", "школьник"],
+            oddIndex: 3,
+            explanation: ",,школьник“ (Schüler) passt nicht zum Arbeitsumfeld."
+        }
+    ];
+
+    let currentIndex = 0;
+    let canClick = true;
+
+    function shuffle(array) {
+        // Wir mischen nur die Anzeige, behalten aber die Information, welches das richtige ist
+        let indexedWords = array.map((w, i) => ({ text: w, originalIndex: i }));
+        for (let i = indexedWords.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [indexedWords[i], indexedWords[j]] = [indexedWords[j], indexedWords[i]];
+        }
+        return indexedWords;
+    }
+
+    function initGame() {
+        currentIndex = 0;
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        canClick = true;
+        const grid = document.getElementById('word-grid');
+        const feedback = document.getElementById('feedback');
+        const nextBtn = document.getElementById('next-btn');
+        const progress = document.getElementById('progress');
+
+        grid.innerHTML = "";
+        feedback.textContent = "";
+        feedback.style.color = "initial";
+        nextBtn.style.display = "none";
+        
+        progress.style.width = (currentIndex / sets.length * 100) + "%";
+
+        const currentSet = sets[currentIndex];
+        const shuffledWords = shuffle(currentSet.words);
+
+        shuffledWords.forEach(wordObj => {
+            const btn = document.createElement('button');
+            btn.className = 'word-btn';
+            btn.textContent = wordObj.text;
+            btn.onclick = () => checkAnswer(btn, wordObj.originalIndex === currentSet.oddIndex);
+            grid.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(btn, isCorrect) {
+        if (!canClick) return;
+
+        if (isCorrect) {
+            btn.classList.add('correct');
+            document.getElementById('feedback').textContent = "Правильно! ✅ " + sets[currentIndex].explanation;
+            document.getElementById('feedback').style.color = "var(--success-color)";
+            document.getElementById('next-btn').style.display = "block";
+            canClick = false;
+        } else {
+            btn.classList.add('wrong');
+            document.getElementById('feedback').textContent = "Das gehört zum Büro-Kontext. Such weiter! ❌";
+            document.getElementById('feedback').style.color = "var(--error-color)";
+            setTimeout(() => {
+                if(canClick) btn.classList.remove('wrong');
+            }, 600);
+        }
+    }
+
+    function showSolution() {
+        if (!canClick) return;
+        const btns = document.querySelectorAll('.word-btn');
+        const currentSet = sets[currentIndex];
+        
+        btns.forEach(btn => {
+            if (btn.textContent === currentSet.words[currentSet.oddIndex]) {
+                btn.classList.add('correct');
+            }
+        });
+        
+        document.getElementById('feedback').textContent = "Lösung: " + currentSet.explanation;
+        document.getElementById('feedback').style.color = "var(--primary-color)";
+        document.getElementById('next-btn').style.display = "block";
+        canClick = false;
+    }
+
+    function nextQuestion() {
+        currentIndex++;
+        if (currentIndex < sets.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('progress').style.width = "100%";
+            document.getElementById('word-grid').innerHTML = "<h3>Отлично! 🎉</h3><p>Du hast alle Wortgruppen analysiert.</p>";
+            document.getElementById('feedback').textContent = "";
+            document.getElementById('next-btn').style.display = "none";
+            document.getElementById('solution-btn').style.display = "none";
+        }
+    }
+
+    initGame();
+</script>
+
+</body>
+</html>
