@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch Lernkartei: Sich vorstellen</title>
+    <style>
+        :root {
+            --primary-green: #2e7d32;
+            --light-green: #e8f5e9;
+            --accent-green: #4caf50;
+            --dark-green: #1b5e20;
+            --card-white: #ffffff;
+            --text-color: #333;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-green);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--dark-green);
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+
+        #progress {
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: var(--primary-green);
+            font-size: 1.1rem;
+        }
+
+        /* 3D Card Container */
+        .card-container {
+            perspective: 1000px;
+            width: 100%;
+            height: 300px;
+            cursor: pointer;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-radius: 15px;
+        }
+
+        .card.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid var(--primary-green);
+            background-color: var(--card-white);
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            background-color: #f9f9f9;
+        }
+
+        .content {
+            font-size: 2.2rem;
+            font-weight: bold;
+            text-align: center;
+            word-wrap: break-word;
+            max-width: 100%;
+            line-height: 1.2;
+        }
+
+        .note {
+            margin-top: 15px;
+            font-size: 1rem;
+            color: #666;
+            font-style: italic;
+        }
+
+        /* Controls */
+        .controls, .extra-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .extra-actions {
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background-color: var(--primary-green);
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        button:hover {
+            background-color: var(--dark-green);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.secondary {
+            background-color: var(--accent-green);
+        }
+
+        .hint {
+            margin-top: 30px;
+            font-size: 0.85rem;
+            color: #777;
+            line-height: 1.5;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .card-container { height: 250px; }
+            .content { font-size: 1.6rem; }
+            button { flex: 1; padding: 12px 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Russisch Lernkartei</h1>
+        <div id="progress">1 / 80</div>
+
+        <div class="card-container" id="cardContainer" aria-label="Karteikarte. Klicken zum Umdrehen">
+            <div class="card" id="card">
+                <div class="card-face card-front">
+                    <div class="content" id="frontText">Загрузка...</div>
+                    <div class="note" id="frontNote"></div>
+                </div>
+                <div class="card-face card-back">
+                    <div class="content" id="backText">Loading...</div>
+                    <div class="note" id="backNote"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="prevBtn">← Vorherige</button>
+            <button id="nextBtn">Nächste →</button>
+        </div>
+
+        <div class="extra-actions">
+            <button id="shuffleBtn" class="secondary">Mischen</button>
+            <button id="startBtn" class="secondary">An den Anfang</button>
+        </div>
+
+        <div class="hint">
+            <b>Steuerung:</b> Leertaste/Enter: Umdrehen | Pfeiltasten: Navigation | Pos1: Anfang
+        </div>
+    </div>
+
+    <script>
+        // Die Vokabelliste als Rohdaten
+        const rawData = `приве́т!	hallo!
+как	wie
+тебя́	dich	(Akkusativ von ты)
+зову́т	man nennt / sie rufen
+Как тебя́ зову́т?	Wie heißt du?
+меня́	mich	(Akkusativ von я)
+меня́ зову́т...	ich heiße...
+И́ра	Ira	(Eigenname)
+а	und / aber	(bei Gegenüberstellungen)
+Ники́та	Nikita	(Eigenname)
+прия́тно	angenehm
+знако́миться / познако́миться	sich bekannt machen / kennenlernen
+прия́тно познако́миться.	sehr erfreut.	schön, dich/Sie kennenzulernen.
+мне	mir	(Dativ von я)
+то́же	auch
+мне то́же.	mir auch.	ganz meinerseits.
+Здра́вствуй!	Guten Tag! / Hallo!	(informell, Einzahl)
+Здра́вствуйте!	Guten Tag!	(formell oder Mehrzahl)
+ста́рше	älter
+вы	Sie / ihr	(Höflichkeitsform)
+вас	Sie / euch	(Akkusativ von вы)
+Как вас зову́т?	Wie heißen Sie?
+Алекса́ндр	Alexander	(Eigenname)
+и́мя	Name
+и	und
+студе́нт	Student
+студе́нтка	Studentin
+учи́ться / вы́учиться	lernen / studieren	(an einer Institution)
+здесь	hier
+отку́да	woher
+из / изо	aus
+Росси́я	Russland	(Eigenname)
+Герма́ния	Deutschland	(Eigenname)
+приезжа́ть / прие́хать	ankommen / hinfahren / kommen	(mit einem Fahrzeug)
+изуча́ть / изучи́ть	studieren / erlernen	(ein Fach oder eine Sprache)
+ру́сский	russisch
+язы́к	Sprache
+уже́	schon
+год	Jahr
+пло́хо	schlecht
+говори́ть / сказа́ть	sprechen / sagen
+по-ру́сски	auf Russisch
+что	was
+литерату́ра	Literatur
+хоте́ть / захоте́ть	wollen
+станови́ться / стать	werden
+преподава́тель	Lehrer / Dozent
+кста́ти	übrigens
+хорошо́	gut
+спаси́бо	danke
+рад	froh / erfreut	(männlich)
+ра́да	froh / erfreut	(weiblich)
+с тобо́й	mit dir
+с ва́ми	mit Ihnen / mit euch
+Пока́!	Tschüss!
+проща́ться / попроща́ться	sich verabschieden
+мужчи́на	Mann
+же́нщина	Frau
+проше́дшее вре́мя	Vergangenheitsform
+настоя́щее вре́мя	Gegenwartsform
+Све́та	Sweta	(Eigenname)
+Серге́й	Sergej	(Eigenname)
+сотру́дница	Mitarbeiterin
+сотру́дник	Mitarbeiter
+рабо́тник	Arbeiter / Angestellter
+ме́неджер	Manager
+кем	als wer / als was	(Instrumental von кто)
+рабо́тать / порабо́тать	arbeiten
+программи́ст	Programmierer
+четы́ре	vier
+го́да	Jahre	(nach den Zahlen 2, 3, 4)
+нра́виться / понра́виться	gefallen
+вам	Ihnen / euch	(Dativ von вы)
+тут	hier
+о́чень	sehr
+уда́ча	Glück / Erfolg
+уда́чи!	viel Glück!
+наде́яться / понаде́яться	hoffen
+до свида́ния!	auf Wiedersehen!
+у́тро	Morgen	(Tageszeit)`;
+
+        // Daten verarbeiten
+        let cards = rawData.split('\n').map(line => {
+            const parts = line.split('\t');
+            return {
+                front: parts[0] || '',
+                back: parts[1] || '',
+                frontNote: parts[2] || '',
+                backNote: parts[3] || ''
+            };
+        });
+
+        let currentIndex = 0;
+        let isFlipped = false;
+
+        // Elemente
+        const cardObj = document.getElementById('card');
+        const frontText = document.getElementById('frontText');
+        const backText = document.getElementById('backText');
+        const frontNote = document.getElementById('frontNote');
+        const backNote = document.getElementById('backNote');
+        const progressDisplay = document.getElementById('progress');
+        
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const shuffleBtn = document.getElementById('shuffleBtn');
+        const startBtn = document.getElementById('startBtn');
+
+        function updateCard() {
+            isFlipped = false;
+            cardObj.classList.remove('is-flipped');
+            
+            const currentCard = cards[currentIndex];
+            
+            frontText.textContent = currentCard.front;
+            backText.textContent = currentCard.back;
+            frontNote.textContent = currentCard.frontNote;
+            backNote.textContent = currentCard.backNote;
+
+            progressDisplay.textContent = `${currentIndex + 1} / ${cards.length}`;
+            
+            adjustFontSize(frontText);
+            adjustFontSize(backText);
+        }
+
+        function adjustFontSize(element) {
+            const length = element.textContent.length;
+            if (length > 20) {
+                element.style.fontSize = "1.5rem";
+            } else if (length > 12) {
+                element.style.fontSize = "1.8rem";
+            } else {
+                element.style.fontSize = "2.2rem";
+            }
+        }
+
+        function flip() {
+            isFlipped = !isFlipped;
+            cardObj.classList.toggle('is-flipped');
+        }
+
+        function next() {
+            if (currentIndex < cards.length - 1) {
+                currentIndex++;
+                updateCard();
+            } else {
+                // Optional: Zum Anfang springen
+                currentIndex = 0;
+                updateCard();
+            }
+        }
+
+        function prev() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateCard();
+            } else {
+                currentIndex = cards.length - 1;
+                updateCard();
+            }
+        }
+
+        function shuffle() {
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+            currentIndex = 0;
+            updateCard();
+        }
+
+        function goToStart() {
+            currentIndex = 0;
+            updateCard();
+        }
+
+        // Event Listener
+        document.getElementById('cardContainer').addEventListener('click', flip);
+        nextBtn.addEventListener('click', next);
+        prevBtn.addEventListener('click', prev);
+        shuffleBtn.addEventListener('click', shuffle);
+        startBtn.addEventListener('click', goToStart);
+
+        // Keyboard Listener
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case ' ':
+                case 'Enter':
+                    e.preventDefault(); // Verhindert Scrollen bei Leertaste
+                    flip();
+                    break;
+                case 'ArrowRight':
+                    next();
+                    break;
+                case 'ArrowLeft':
+                    prev();
+                    break;
+                case 'Home':
+                case 'Pos1':
+                    goToStart();
+                    break;
+            }
+        });
+
+        // Initialisierung
+        updateCard();
+    </script>
+</body>
+</html>
