@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Die Höflichkeitsform</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 850px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        h2 { text-align: center; color: var(--primary-color); margin-bottom: 5px; }
+        p.instruction { text-align: center; color: #666; margin-bottom: 25px; font-size: 0.95rem; }
+
+        .matching-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .column-title {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+            text-align: center;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .item {
+            background: #fff;
+            border: 2px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        .item small {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: normal;
+            margin-top: 4px;
+            color: #777;
+        }
+
+        .item.selected {
+            border-color: var(--accent-color);
+            background-color: #e1f5fe;
+            transform: scale(1.02);
+        }
+
+        .item.matched {
+            border-color: var(--success-color);
+            background-color: #e8f5e9;
+            cursor: default;
+        }
+
+        /* Spezialfarben für die Lösung */
+        .pair-0 { border-color: #3498db !important; background-color: #ebf5fb !important; }
+        .pair-1 { border-color: #9b59b6 !important; background-color: #f5eef8 !important; }
+        .pair-2 { border-color: #e67e22 !important; background-color: #fdf2e9 !important; }
+        .pair-3 { border-color: #1abc9c !important; background-color: #e8f8f5 !important; }
+
+        .item.wrong {
+            border-color: var(--error-color);
+            background-color: #ffebee;
+            animation: shake 0.4s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            font-size: 1rem;
+        }
+
+        #solution-btn { background-color: #f39c12; }
+        #reset-btn { background-color: #95a5a6; }
+
+        .feedback {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+            min-height: 24px;
+        }
+
+        /* Mobile Anpassung */
+        @media (max-width: 600px) {
+            .matching-grid { grid-template-columns: 1fr; }
+            .container { padding: 15px; }
+            .item { font-size: 1rem; padding: 10px; min-height: 50px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>,,Sie“-Formen (Höflichkeit)</h2>
+    <p class="instruction">Welche Form von ,,Sie“ passt in welchen Satz? Klicke zuerst links die Form und dann rechts das passende Beispiel an.</p>
+
+    <div class="matching-grid">
+        <div class="column" id="left-col">
+            <div class="column-title">Form</div>
+        </div>
+        <div class="column" id="right-col">
+            <div class="column-title">Satz aus Dialog 3</div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn" id="solution-btn">Lösung anzeigen</button>
+        <button class="btn" id="reset-btn">Neu starten</button>
+    </div>
+
+    <div id="feedback" class="feedback"></div>
+</div>
+
+<script>
+    const pairs = [
+        { 
+            left: "Вы", 
+            leftDetail: "Nominativ: Sie (Subjekt)", 
+            right: ",,Вы наша новая сотрудница?“", 
+            id: 0 
+        },
+        { 
+            left: "Вас", 
+            leftDetail: "Akkusativ: Sie (Objekt)", 
+            right: ",,Как вас зовут?“", 
+            id: 1 
+        },
+        { 
+            left: "Вам", 
+            leftDetail: "Dativ: Ihnen", 
+            right: ",,Вам нравится работать тут?“", 
+            id: 2 
+        },
+        { 
+            left: "С вами", 
+            leftDetail: "Instrumental: Mit Ihnen", 
+            right: ",,Я рад с вами познакомиться.“", 
+            id: 3 
+        }
+    ];
+
+    let selectedLeft = null;
+    let selectedRight = null;
+    let matchedCount = 0;
+
+    const leftCol = document.getElementById('left-col');
+    const rightCol = document.getElementById('right-col');
+    const feedback = document.getElementById('feedback');
+
+    function shuffle(array) {
+        let arr = [...array];
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function initGame() {
+        leftCol.innerHTML = '<div class="column-title">Form</div>';
+        rightCol.innerHTML = '<div class="column-title">Satz aus Dialog 3</div>';
+        feedback.textContent = '';
+        selectedLeft = null;
+        selectedRight = null;
+        matchedCount = 0;
+
+        const shuffledLeft = shuffle(pairs);
+        const shuffledRight = shuffle(pairs);
+
+        shuffledLeft.forEach(pair => {
+            const div = document.createElement('div');
+            div.className = 'item';
+            div.innerHTML = `<strong>${pair.left}</strong><small>${pair.leftDetail}</small>`;
+            div.dataset.id = pair.id;
+            div.onclick = () => selectItem(div, 'left');
+            leftCol.appendChild(div);
+        });
+
+        shuffledRight.forEach(pair => {
+            const div = document.createElement('div');
+            div.className = 'item';
+            div.textContent = pair.right;
+            div.dataset.id = pair.id;
+            div.onclick = () => selectItem(div, 'right');
+            rightCol.appendChild(div);
+        });
+    }
+
+    function selectItem(element, side) {
+        if (element.classList.contains('matched')) return;
+
+        if (side === 'left') {
+            document.querySelectorAll('#left-col .item').forEach(i => i.classList.remove('selected', 'wrong'));
+            selectedLeft = element;
+        } else {
+            document.querySelectorAll('#right-col .item').forEach(i => i.classList.remove('selected', 'wrong'));
+            selectedRight = element;
+        }
+
+        element.classList.add('selected');
+
+        if (selectedLeft && selectedRight) {
+            if (selectedLeft.dataset.id === selectedRight.dataset.id) {
+                // Erfolg
+                selectedLeft.classList.replace('selected', 'matched');
+                selectedRight.classList.replace('selected', 'matched');
+                selectedLeft = null;
+                selectedRight = null;
+                matchedCount++;
+                
+                if (matchedCount === pairs.length) {
+                    feedback.textContent = "Hervorragend! Du beherrschst die Höflichkeitsformen. 🎉";
+                    feedback.style.color = "var(--success-color)";
+                }
+            } else {
+                // Fehler
+                const l = selectedLeft;
+                const r = selectedRight;
+                l.classList.add('wrong');
+                r.classList.add('wrong');
+                feedback.textContent = "Das passt nicht zusammen.";
+                feedback.style.color = "var(--error-color)";
+                
+                setTimeout(() => {
+                    if (l.classList.contains('wrong')) l.classList.remove('selected', 'wrong');
+                    if (r.classList.contains('wrong')) r.classList.remove('selected', 'wrong');
+                }, 500);
+                
+                selectedLeft = null;
+                selectedRight = null;
+            }
+        }
+    }
+
+    document.getElementById('solution-btn').onclick = () => {
+        document.querySelectorAll('.item').forEach(item => {
+            const id = item.dataset.id;
+            item.classList.remove('selected', 'wrong', 'matched');
+            item.classList.add('matched');
+            item.classList.add(`pair-${id}`);
+        });
+        feedback.textContent = "Hier siehst du die richtige Zuordnung (farbig markiert).";
+        feedback.style.color = "var(--primary-color)";
+    };
+
+    document.getElementById('reset-btn').onclick = initGame;
+
+    // Start
+    initGame();
+</script>
+
+</body>
+</html>
